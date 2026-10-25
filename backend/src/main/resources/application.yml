@@ -1,0 +1,80 @@
+spring:
+  application:
+    name: astute-funerals
+  datasource:
+    # Defaults to a local H2 file database (./data). For production set DB_URL,
+    # DB_USERNAME and DB_PASSWORD, e.g. jdbc:postgresql://localhost:5432/astute
+    url: ${DB_URL:jdbc:h2:file:./data/astute;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+server:
+  port: ${PORT:8080}
+  forward-headers-strategy: native
+  servlet:
+    session:
+      timeout: 8h
+      cookie:
+        http-only: true
+        same-site: strict
+        secure: ${COOKIE_SECURE:false}
+
+app:
+  # Public address of the website - used for canonical links and the sitemap.
+  site-url: ${SITE_URL:http://localhost:5173}
+  mail:
+    # Sender address for replies emailed from the admin Messages page. Email is only sent when
+    # this AND an SMTP server are configured (SPRING_MAIL_HOST, SPRING_MAIL_PORT,
+    # SPRING_MAIL_USERNAME, SPRING_MAIL_PASSWORD). Otherwise replies open in the admin's email app.
+    from: ${MAIL_FROM:}
+  admin:
+    # First (super) admin account, created on first start. Change the password in Admin > Settings.
+    username: ${ADMIN_USERNAME:admin}
+    password: ${ADMIN_PASSWORD:}
+  # Funeral plans offered on the website. max-children / max-extended limit
+  # how many dependants of each kind an applicant may add.
+  plans:
+    - id: single
+      name: Single Plan
+      cover: 10000
+      premium: 95
+      spouse: false
+      max-children: 0
+      max-extended: 0
+      summary: Cover for the main member only.
+      features:
+        - R10 000 funeral cover
+        - Main member aged 18 – 65
+        - Claims paid within 48 hours
+        - 6-month waiting period on natural death
+    - id: family
+      name: Family Plan
+      cover: 15000
+      premium: 185
+      spouse: true
+      max-children: 5
+      max-extended: 0
+      featured: true
+      summary: You, your spouse and up to 5 children.
+      features:
+        - R15 000 cover for main member & spouse
+        - Up to 5 children covered
+        - Free grocery benefit
+        - Claims paid within 48 hours
+    - id: extended
+      name: Extended Family Plan
+      cover: 20000
+      premium: 320
+      spouse: true
+      max-children: 5
+      max-extended: 4
+      summary: Your family plus up to 4 extended members.
+      features:
+        - R20 000 cover for main member & spouse
+        - Up to 5 children & 4 extended members
+        - Tombstone & catering benefit
+        - Repatriation within South Africa

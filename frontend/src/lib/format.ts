@@ -1,0 +1,24 @@
+import type { Option } from '../types';
+
+export const money = (n: number) => `R${Number(n || 0).toLocaleString('en-ZA')}`;
+
+/** "10000" -> "10 000" (South African thousands separator). */
+export const thousands = (n: number) => n.toLocaleString('en-ZA').replace(/,/g, ' ');
+
+export const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' });
+
+export const formatDateTime = (iso: string) =>
+  new Date(iso).toLocaleString('en-ZA', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+export const labelOf = (options: Option[], value: string) => options.find((o) => o.value === value)?.label ?? value;
+
+export const telLink = (phone: string) => `tel:${phone.replace(/[^\d+]/g, '')}`;
+
+export const capitalise = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
