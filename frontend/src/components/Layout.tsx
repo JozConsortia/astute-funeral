@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { mapLink, site } from '../config/site';
-import { useTextSize, type TextSize } from '../lib/textSize';
+import { Icon, type IconName } from './Icon';
 
 export function Layout() {
   const { pathname, hash } = useLocation();
@@ -30,34 +30,6 @@ export function Layout() {
   );
 }
 
-const TEXT_SIZES: { value: TextSize; label: string; name: string }[] = [
-  { value: 'normal', label: 'A', name: 'Normal text' },
-  { value: 'large', label: 'A+', name: 'Large text' },
-  { value: 'larger', label: 'A++', name: 'Extra large text' },
-];
-
-/** Lets visitors enlarge all text on the site - remembered for their next visit. */
-function TextSizeControl() {
-  const [size, setSize] = useTextSize();
-  return (
-    <div className="text-size" role="group" aria-label="Text size">
-      <span className="text-size__label">Text size</span>
-      {TEXT_SIZES.map((t) => (
-        <button
-          key={t.value}
-          type="button"
-          className={`text-size__btn text-size__btn--${t.value}`}
-          aria-pressed={size === t.value}
-          aria-label={t.name}
-          title={t.name}
-          onClick={() => setSize(t.value)}
-        >
-          {t.label}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 /** Floating call button for the 24/7 emergency & pick-ups line, on every public page. */
 function EmergencyButton() {
@@ -150,10 +122,9 @@ function Header() {
           <NavLink className={({ isActive }) => `btn btn--gold btn--sm site-nav__cta${isActive ? ' is-active' : ''}`} to="/get-covered">
             Get covered
           </NavLink>
-          <TextSizeControl />
           <div className="site-nav__contact">
-            <a href={site.officeLink}>Office: {site.office}</a>
-            <a href={site.emergencyLink}>24/7 Emergency: {site.emergency}</a>
+            <a href={site.officeLink}><Icon name="phone" /> Office: {site.office}</a>
+            <a href={site.emergencyLink}><Icon name="phone" /> 24/7 Emergency: {site.emergency}</a>
             <span>{site.hours}</span>
           </div>
         </nav>
@@ -161,6 +132,14 @@ function Header() {
     </header>
   );
 }
+
+const FOOTER_ACTIONS: { label: string; href: string; icon: IconName; urgent?: boolean; external?: boolean }[] = [
+  { label: '24/7 emergency & pick-ups', href: site.emergencyLink, icon: 'phone', urgent: true },
+  { label: 'Call the office', href: site.officeLink, icon: 'phone' },
+  { label: 'WhatsApp us', href: site.whatsappLink, icon: 'whatsapp', external: true },
+  { label: 'Email us', href: `mailto:${site.email}`, icon: 'mail' },
+  { label: 'Get directions', href: mapLink, icon: 'pin', external: true },
+];
 
 function Footer() {
   return (
@@ -190,27 +169,25 @@ function Footer() {
           </ul>
         </div>
         <div>
-          <h2 className="site-footer__heading">Contact</h2>
-          <ul className="site-footer__links site-footer__contact">
-            <li><span>Office</span><a href={site.officeLink}>{site.office}</a></li>
-            <li><span>Mobile</span><a href={site.mobileLink}>{site.mobile}</a></li>
-            <li>
-              <span>Emergency / Pick-ups (24/7)</span>
-              <a className="site-footer__emergency" href={site.emergencyLink}>{site.emergency}</a>
-            </li>
-            <li><span>Email</span><a href={`mailto:${site.email}`}>{site.email}</a></li>
+          <h2 className="site-footer__heading">Get in touch</h2>
+          {/* Icons only; the name of each action is in its label and tooltip. */}
+          <ul className="footer-icons">
+            {FOOTER_ACTIONS.map((a) => (
+              <li key={a.label}>
+                <a
+                  className={`footer-icon${a.urgent ? ' footer-icon--urgent' : ''}`}
+                  href={a.href}
+                  aria-label={a.label}
+                  title={a.label}
+                  {...(a.external ? { target: '_blank', rel: 'noopener' } : {})}
+                >
+                  <Icon name={a.icon} />
+                </a>
+              </li>
+            ))}
           </ul>
-        </div>
-        <div>
-          <h2 className="site-footer__heading">Visit us</h2>
-          <address className="site-footer__address">
-            {site.street}<br />{site.suburb}<br />{site.city}, {site.postalCode}
-          </address>
-          <p><a href={mapLink} target="_blank" rel="noopener">Get directions &rarr;</a></p>
-          <p className="site-footer__note">
-            {site.hoursLines[0]}
-            <br />
-            {site.hoursLines[1]}
+          <p className="site-footer__hours">
+            <Icon name="clock" /> {site.hours}
           </p>
         </div>
       </div>

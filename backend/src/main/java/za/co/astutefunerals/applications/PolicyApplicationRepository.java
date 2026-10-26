@@ -17,6 +17,7 @@ public interface PolicyApplicationRepository extends JpaRepository<PolicyApplica
 			select a from PolicyApplication a
 			where (:status is null or a.status = :status)
 			  and (:planId is null or a.planId = :planId)
+			  and a.createdAt >= :since
 			  and (:q is null
 			       or lower(concat(a.firstName, ' ', a.lastName)) like :q
 			       or lower(a.idNumber) like :q
@@ -25,14 +26,17 @@ public interface PolicyApplicationRepository extends JpaRepository<PolicyApplica
 			       or lower(a.email) like :q)
 			""";
 
-	/** {@code q} must already be lower-cased and wrapped in % wildcards (or null). */
+	/**
+	 * {@code q} must already be lower-cased and wrapped in % wildcards (or null). {@code since} is never null
+	 * (Instant.EPOCH for "any time") so that PostgreSQL always knows its type.
+	 */
 	@Query(SEARCH)
 	Page<PolicyApplication> search(@Param("q") String q, @Param("status") ApplicationStatus status,
-			@Param("planId") String planId, Pageable pageable);
+			@Param("planId") String planId, @Param("since") Instant since, Pageable pageable);
 
 	@Query(SEARCH + " order by a.createdAt desc")
 	List<PolicyApplication> searchAll(@Param("q") String q, @Param("status") ApplicationStatus status,
-			@Param("planId") String planId);
+			@Param("planId") String planId, @Param("since") Instant since);
 
 	boolean existsByReference(String reference);
 

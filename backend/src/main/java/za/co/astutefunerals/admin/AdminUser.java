@@ -44,6 +44,9 @@ public class AdminUser {
 
 	private Instant lastLoginAt;
 
+	/** True while the user still has a temporary password that a super admin gave them. */
+	private Boolean mustChangePassword;
+
 	protected AdminUser() {
 	}
 
@@ -134,6 +137,14 @@ public class AdminUser {
 
 	public void setLastLoginAt(Instant lastLoginAt) {
 		this.lastLoginAt = lastLoginAt;
+	}
+
+	public boolean isMustChangePassword() {
+		return mustChangePassword != null && mustChangePassword;
+	}
+
+	public void setMustChangePassword(boolean mustChangePassword) {
+		this.mustChangePassword = mustChangePassword;
 	}
 
 }

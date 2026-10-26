@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import { site } from '../config/site';
 import { ApiError, api } from '../lib/api';
 import { money, thousands } from '../lib/format';
@@ -6,6 +6,7 @@ import { useMeta } from '../lib/meta';
 import { isFutureDate, isUnder18, isValidEmail, isValidIdNumber, isValidPhone } from '../lib/validation';
 import type { ApplicationInput, BeneficiaryInput, DependantInput, FieldErrors, Meta, Plan } from '../types';
 import { Field, FormAlert, Honeypot } from './Field';
+import { Icon, IconInput, type IconName } from './Icon';
 
 interface ApplicationFormProps {
   /** /api/applications (public) or /api/admin/applications (admin capture). */
@@ -387,63 +388,107 @@ function MemberStep({ meta, data, errors, update }: StepProps) {
   return (
     <fieldset className="form-step">
       <legend className="form-step__title">Main member details</legend>
-      <div className="grid grid--3">
-        <Field label="Title" htmlFor="f-title">
-          <select id="f-title" value={data.title} onChange={(e) => update('title', e.target.value)}>
-            <option value="">Select</option>
-            {meta.titles.map((t) => <option key={t}>{t}</option>)}
-          </select>
-        </Field>
-        <Field label="First name(s)" htmlFor="f-firstName" required error={errors.firstName}>
-          <input {...text('firstName')} autoComplete="given-name" maxLength={60} />
-        </Field>
-        <Field label="Surname" htmlFor="f-lastName" required error={errors.lastName}>
-          <input {...text('lastName')} autoComplete="family-name" maxLength={60} />
-        </Field>
-        <Field label="SA ID / Passport no." htmlFor="f-idNumber" required error={errors.idNumber}>
-          <input {...text('idNumber')} maxLength={20} />
-        </Field>
-        <Field label="Date of birth" htmlFor="f-dob" required error={errors.dateOfBirth}>
-          <input id="f-dob" type="date" value={data.dateOfBirth} onChange={(e) => update('dateOfBirth', e.target.value)} />
-        </Field>
-        <Field label="Gender" htmlFor="f-gender" required error={errors.gender}>
-          <select id="f-gender" value={data.gender} onChange={(e) => update('gender', e.target.value)}>
-            <option value="">Select</option>
-            {meta.genders.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
-          </select>
-        </Field>
-        <Field label="Marital status" htmlFor="f-marital">
-          <select id="f-marital" value={data.maritalStatus} onChange={(e) => update('maritalStatus', e.target.value)}>
-            <option value="">Select</option>
-            {meta.maritalStatuses.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-          </select>
-        </Field>
-        <Field label="Cellphone" htmlFor="f-phone" required error={errors.phone}>
-          <input {...text('phone')} type="tel" autoComplete="tel" placeholder="e.g. 082 123 4567" />
-        </Field>
-        <Field label="Alternative number" htmlFor="f-altPhone" error={errors.altPhone}>
-          <input {...text('altPhone')} type="tel" />
-        </Field>
-        <Field label="Email address" htmlFor="f-email" error={errors.email} className="grid__span-2">
-          <input {...text('email')} type="email" autoComplete="email" />
-        </Field>
-        <Field label="Street address" htmlFor="f-address" required error={errors.address} className="grid__span-3">
-          <input {...text('address')} autoComplete="street-address" maxLength={200} />
-        </Field>
-        <Field label="Town / City" htmlFor="f-city" required error={errors.city}>
-          <input {...text('city')} autoComplete="address-level2" maxLength={80} />
-        </Field>
-        <Field label="Province" htmlFor="f-province" required error={errors.province}>
-          <select id="f-province" value={data.province} onChange={(e) => update('province', e.target.value)}>
-            <option value="">Select</option>
-            {meta.provinces.map((p) => <option key={p}>{p}</option>)}
-          </select>
-        </Field>
-        <Field label="Postal code" htmlFor="f-postalCode" error={errors.postalCode}>
-          <input {...text('postalCode')} inputMode="numeric" maxLength={4} autoComplete="postal-code" />
-        </Field>
-      </div>
+      <p className="form-step__hint">The person taking out the policy. Fields marked * are required.</p>
+
+      <FormGroup icon="user" title="About you">
+        <div className="grid grid--3">
+          <Field label="Title" htmlFor="f-title">
+            <select id="f-title" value={data.title} onChange={(e) => update('title', e.target.value)}>
+              <option value="">Select</option>
+              {meta.titles.map((t) => <option key={t}>{t}</option>)}
+            </select>
+          </Field>
+          <Field label="First name(s)" htmlFor="f-firstName" required error={errors.firstName}>
+            <IconInput icon="user">
+              <input {...text('firstName')} autoComplete="given-name" maxLength={60} placeholder="e.g. Thabo" />
+            </IconInput>
+          </Field>
+          <Field label="Surname" htmlFor="f-lastName" required error={errors.lastName}>
+            <IconInput icon="user">
+              <input {...text('lastName')} autoComplete="family-name" maxLength={60} placeholder="e.g. Mokoena" />
+            </IconInput>
+          </Field>
+          <Field label="SA ID / Passport no." htmlFor="f-idNumber" required error={errors.idNumber}>
+            <IconInput icon="idCard">
+              <input {...text('idNumber')} maxLength={20} inputMode="numeric" placeholder="13-digit ID number" />
+            </IconInput>
+          </Field>
+          <Field label="Date of birth" htmlFor="f-dob" required error={errors.dateOfBirth}>
+            <input id="f-dob" type="date" value={data.dateOfBirth} onChange={(e) => update('dateOfBirth', e.target.value)} />
+          </Field>
+          <Field label="Gender" htmlFor="f-gender" required error={errors.gender}>
+            <select id="f-gender" value={data.gender} onChange={(e) => update('gender', e.target.value)}>
+              <option value="">Select</option>
+              {meta.genders.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
+            </select>
+          </Field>
+          <Field label="Marital status" htmlFor="f-marital">
+            <select id="f-marital" value={data.maritalStatus} onChange={(e) => update('maritalStatus', e.target.value)}>
+              <option value="">Select</option>
+              {meta.maritalStatuses.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+            </select>
+          </Field>
+        </div>
+      </FormGroup>
+
+      <FormGroup icon="phone" title="Contact details" hint="How we will reach you about your policy.">
+        <div className="grid grid--3">
+          <Field label="Cellphone" htmlFor="f-phone" required error={errors.phone}>
+            <IconInput icon="phone">
+              <input {...text('phone')} type="tel" autoComplete="tel" placeholder="082 123 4567" />
+            </IconInput>
+          </Field>
+          <Field label="Alternative number" htmlFor="f-altPhone" error={errors.altPhone}>
+            <IconInput icon="phone">
+              <input {...text('altPhone')} type="tel" placeholder="Optional" />
+            </IconInput>
+          </Field>
+          <Field label="Email address" htmlFor="f-email" error={errors.email}>
+            <IconInput icon="mail">
+              <input {...text('email')} type="email" autoComplete="email" placeholder="you@example.com" />
+            </IconInput>
+          </Field>
+        </div>
+      </FormGroup>
+
+      <FormGroup icon="home" title="Home address">
+        <div className="grid grid--3">
+          <Field label="Street address" htmlFor="f-address" required error={errors.address} className="grid__span-3">
+            <IconInput icon="pin">
+              <input {...text('address')} autoComplete="street-address" maxLength={200} placeholder="House number and street name" />
+            </IconInput>
+          </Field>
+          <Field label="Town / City" htmlFor="f-city" required error={errors.city}>
+            <input {...text('city')} autoComplete="address-level2" maxLength={80} placeholder="e.g. Pretoria" />
+          </Field>
+          <Field label="Province" htmlFor="f-province" required error={errors.province}>
+            <select id="f-province" value={data.province} onChange={(e) => update('province', e.target.value)}>
+              <option value="">Select</option>
+              {meta.provinces.map((p) => <option key={p}>{p}</option>)}
+            </select>
+          </Field>
+          <Field label="Postal code" htmlFor="f-postalCode" error={errors.postalCode}>
+            <input {...text('postalCode')} inputMode="numeric" maxLength={4} autoComplete="postal-code" placeholder="e.g. 0183" />
+          </Field>
+        </div>
+      </FormGroup>
     </fieldset>
+  );
+}
+
+/** A titled box that groups related fields within a step. */
+function FormGroup({ icon, title, hint, children }: { icon: IconName; title: string; hint?: string; children: ReactNode }) {
+  return (
+    <section className="form-group">
+      <header className="form-group__head">
+        <span className="form-group__icon"><Icon name={icon} /></span>
+        <div>
+          <h3 className="form-group__title">{title}</h3>
+          {hint && <p className="form-group__hint">{hint}</p>}
+        </div>
+      </header>
+      {children}
+    </section>
   );
 }
 
@@ -544,19 +589,19 @@ function FamilyStep({ meta, plan, data, errors, maxDependants, addDependant, rem
         <p className="form-step__hint">The person who will receive the payout when a claim is made.</p>
         <div className="grid grid--3">
           <Field label="First name(s)" htmlFor="b-firstName" required error={errors['beneficiary.firstName']}>
-            <input {...ben('firstName')} maxLength={60} />
+            <IconInput icon="user"><input {...ben('firstName')} maxLength={60} placeholder="e.g. Lerato" /></IconInput>
           </Field>
           <Field label="Surname" htmlFor="b-lastName" required error={errors['beneficiary.lastName']}>
-            <input {...ben('lastName')} maxLength={60} />
+            <IconInput icon="user"><input {...ben('lastName')} maxLength={60} placeholder="e.g. Mokoena" /></IconInput>
           </Field>
           <Field label="SA ID / Passport no." htmlFor="b-idNumber" required error={errors['beneficiary.idNumber']}>
-            <input {...ben('idNumber')} maxLength={20} />
+            <IconInput icon="idCard"><input {...ben('idNumber')} maxLength={20} inputMode="numeric" placeholder="13-digit ID number" /></IconInput>
           </Field>
           <Field label="Relationship to you" htmlFor="b-relationship" required error={errors['beneficiary.relationship']}>
             <input {...ben('relationship')} maxLength={40} placeholder="e.g. Daughter" />
           </Field>
           <Field label="Phone number" htmlFor="b-phone" required error={errors['beneficiary.phone']}>
-            <input {...ben('phone')} type="tel" />
+            <IconInput icon="phone"><input {...ben('phone')} type="tel" placeholder="082 123 4567" /></IconInput>
           </Field>
         </div>
       </div>

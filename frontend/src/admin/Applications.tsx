@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import { formatDate, money, telLink } from '../lib/format';
 import type { ApplicationSummary, PageResult } from '../types';
@@ -7,10 +8,20 @@ import { StatusPill } from './StatusPill';
 
 export function Applications() {
   const { meta, openApplication, refreshKey, toast } = useAdmin();
+  // Status, plan and period live in the address bar, so the overview tiles can link straight to a filtered list.
+  const [urlParams, setUrlParams] = useSearchParams();
+  const status = urlParams.get('status') ?? '';
+  const plan = urlParams.get('plan') ?? '';
+  const period = urlParams.get('period') === 'month' ? 'month' : '';
+  const setFilter = (key: 'status' | 'plan' | 'period', value: string) => {
+    const next = new URLSearchParams(urlParams);
+    if (value) next.set(key, value);
+    else next.delete(key);
+    setUrlParams(next, { replace: true });
+    setPage(1);
+  };
   const [search, setSearch] = useState('');
   const [q, setQ] = useState('');
-  const [status, setStatus] = useState('');
-  const [plan, setPlan] = useState('');
   const [page, setPage] = useState(1);
   const [data, setData] = useState<PageResult<ApplicationSummary> | null>(null);
 
@@ -27,6 +38,7 @@ export function Applications() {
   if (q) params.set('q', q);
   if (status) params.set('status', status);
   if (plan) params.set('plan', plan);
+  if (period) params.set('period', period);
   const filterQuery = params.toString();
 
   useEffect(() => {
@@ -37,7 +49,7 @@ export function Applications() {
       .catch((err: Error) => toast(err.message, 'error'));
   }, [filterQuery, page, refreshKey, toast]);
 
-  const filtered = Boolean(q || status || plan);
+  const filtered = Boolean(q || status || plan || period);
 
   return (
     <section>
@@ -50,15 +62,19 @@ export function Applications() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <select aria-label="Filter by status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
+        <select aria-label="Filter by status" value={status} onChange={(e) => setFilter('status', e.target.value)}>
           <option value="">All statuses</option>
           {meta.statuses.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
-        <select aria-label="Filter by plan" value={plan} onChange={(e) => { setPlan(e.target.value); setPage(1); }}>
+        <select aria-label="Filter by plan" value={plan} onChange={(e) => setFilter('plan', e.target.value)}>
           <option value="">All plans</option>
           {meta.plans.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
-        <a className="btn btn--outline btn--sm" href={`/api/admin/applications.csv?${filterQuery}`}>Export CSV</a>
+        <select aria-label="Filter by date" value={period} onChange={(e) => setFilter('period', e.target.value)}>
+          <option value="">Any time</option>
+          <option value="month">This month</option>
+        </select>
+        <a className="btn btn--outline btn--sm" href={`/api/admin/applications.xlsx?${filterQuery}`}>Export to Excel</a>
       </div>
 
       <div className="panel">
@@ -105,7 +121,17 @@ export function Applications() {
         </div>
         {data && (
           <div className="pager">
-            <span className="muted">{data.total} application{data.total === 1 ? '' : 's'}</span>
+            <span className="muted">
+              {data.total} application{data.total === 1 ? '' : 's'}
+              {filtered && (
+                <>
+                  {' · '}
+                  <button className="link-btn" type="button" onClick={() => { setSearch(''); setUrlParams({}, { replace: true }); setPage(1); }}>
+                    Clear filters
+                  </button>
+                </>
+              )}
+            </span>
             <div className="pager__buttons">
               <button className="btn btn--ghost btn--sm" type="button" disabled={data.page <= 1} onClick={() => setPage(data.page - 1)}>‹ Prev</button>
               <span>Page {data.page} of {data.pages}</span>

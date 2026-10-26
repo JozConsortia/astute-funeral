@@ -81,14 +81,14 @@ public class ApplicationService {
 	public PageResult<Summary> search(Filter filter, int page) {
 		int current = Math.max(1, page);
 		Page<PolicyApplication> result = applications.search(filter.like(), filter.status(), filter.planId(),
-				PageRequest.of(current - 1, PAGE_SIZE, Sort.by(Sort.Direction.DESC, "createdAt")));
+				since(filter), PageRequest.of(current - 1, PAGE_SIZE, Sort.by(Sort.Direction.DESC, "createdAt")));
 		return new PageResult<>(result.map(Summary::of).getContent(), result.getTotalElements(), current,
 				Math.max(1, result.getTotalPages()));
 	}
 
 	@Transactional(readOnly = true)
 	public List<Detail> searchAll(Filter filter) {
-		return applications.searchAll(filter.like(), filter.status(), filter.planId())
+		return applications.searchAll(filter.like(), filter.status(), filter.planId(), since(filter))
 			.stream()
 			.map(Detail::of)
 			.toList();
@@ -123,14 +123,21 @@ public class ApplicationService {
 		for (Object[] row : applications.countByStatus()) {
 			byStatus.put((ApplicationStatus) row[0], (Long) row[1]);
 		}
-		LocalDate today = LocalDate.now(clock);
-		Instant monthStart = today.withDayOfMonth(1).atStartOfDay(clock.getZone()).toInstant();
 		return new Stats(byStatus.values().stream().mapToLong(Long::longValue).sum(), byStatus,
-				applications.countByCreatedAtGreaterThanEqual(monthStart),
+				applications.countByCreatedAtGreaterThanEqual(monthStart()),
 				applications.sumPremiumByStatus(ApplicationStatus.APPROVED), messages.countByReadFalse(),
 				messages.countAwaitingReply(),
 				applications.countByPlan().stream().map(r -> new PlanCount((String) r[0], (Long) r[1])).toList(),
 				applications.findTop6ByOrderByCreatedAtDesc().stream().map(Summary::of).toList());
+	}
+
+	/** Start of the current month in the business time zone; "This month" on the overview and in the list. */
+	private Instant monthStart() {
+		return LocalDate.now(clock).withDayOfMonth(1).atStartOfDay(clock.getZone()).toInstant();
+	}
+
+	private Instant since(Filter filter) {
+		return filter.thisMonth() ? monthStart() : Instant.EPOCH;
 	}
 
 	private PolicyApplication find(long id) {
@@ -138,14 +145,14 @@ public class ApplicationService {
 			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found."));
 	}
 
-	/** Search filters from the admin list. Blank values mean "any". */
-	public record Filter(String q, ApplicationStatus status, String planId) {
+	/** Search filters from the admin list. Blank values mean "any"; period "month" means this month only. */
+	public record Filter(String q, ApplicationStatus status, String planId, boolean thisMonth) {
 
-		public static Filter of(String q, String status, String plan) {
+		public static Filter of(String q, String status, String plan, String period) {
 			String query = ApplicationValidator.clean(q, 80);
 			return new Filter(query.isEmpty() ? null : query.toLowerCase(),
 					Labelled.parse(ApplicationStatus.class, status).orElse(null),
-					Optional.ofNullable(plan).filter(p -> !p.isBlank()).orElse(null));
+					Optional.ofNullable(plan).filter(p -> !p.isBlank()).orElse(null), "month".equals(period));
 		}
 
 		String like() {

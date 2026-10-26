@@ -32,8 +32,6 @@ import za.co.astutefunerals.web.ValidationException;
 @RequestMapping("/api/admin/users")
 public class UserController {
 
-	static final int MIN_PASSWORD_LENGTH = 10;
-
 	private final AdminUserRepository admins;
 
 	private final PasswordEncoder encoder;
@@ -47,22 +45,23 @@ public class UserController {
 	}
 
 	public record UserView(Long id, String username, String fullName, String email, AdminRole role, boolean active,
-			Instant createdAt, Instant lastLoginAt) {
+			boolean mustChangePassword, Instant createdAt, Instant lastLoginAt) {
 
 		static UserView of(AdminUser a) {
 			return new UserView(a.getId(), a.getUsername(), a.getFullName(), a.getEmail(), a.getRole(), a.isActive(),
-					a.getCreatedAt(), a.getLastLoginAt());
+					a.isMustChangePassword(), a.getCreatedAt(), a.getLastLoginAt());
 		}
 
 	}
 
-	public record CreateUserRequest(String fullName, String username, String email, String role, String password) {
+	public record CreateUserRequest(String fullName, String username, String email, String role) {
 	}
 
 	public record UpdateUserRequest(String fullName, String email, String role, Boolean active) {
 	}
 
-	public record PasswordResetRequest(String password) {
+	/** Shown to the super admin once; only its hash is stored. */
+	public record TemporaryPassword(UserView user, String temporaryPassword) {
 	}
 
 	@GetMapping
@@ -73,7 +72,7 @@ public class UserController {
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	@Transactional
-	public UserView create(@RequestBody CreateUserRequest req) {
+	public TemporaryPassword create(@RequestBody CreateUserRequest req) {
 		Map<String, String> errors = new LinkedHashMap<>();
 		String fullName = fullName(req.fullName(), errors);
 		String email = email(req.email(), errors);
@@ -85,12 +84,13 @@ public class UserController {
 		else if (admins.existsByUsernameIgnoreCase(username)) {
 			errors.put("username", "That username is already taken.");
 		}
-		password(req.password(), "password", errors);
 		if (!errors.isEmpty()) {
 			throw new ValidationException(errors);
 		}
-		return UserView.of(admins.save(
-				new AdminUser(username, encoder.encode(req.password()), fullName, email, role, Instant.now(clock))));
+		String temporary = PasswordPolicy.generate();
+		AdminUser user = new AdminUser(username, encoder.encode(temporary), fullName, email, role, Instant.now(clock));
+		user.setMustChangePassword(true);
+		return new TemporaryPassword(UserView.of(admins.save(user)), temporary);
 	}
 
 	@PatchMapping("/{id}")
@@ -124,16 +124,15 @@ public class UserController {
 		return UserView.of(user);
 	}
 
+	/** Gives the user a new temporary password, which they must replace when they next sign in. */
 	@PostMapping("/{id}/password")
 	@Transactional
-	public void resetPassword(@PathVariable long id, @RequestBody PasswordResetRequest req) {
+	public TemporaryPassword resetPassword(@PathVariable long id) {
 		AdminUser user = find(id);
-		Map<String, String> errors = new LinkedHashMap<>();
-		password(req.password(), "password", errors);
-		if (!errors.isEmpty()) {
-			throw new ValidationException(errors);
-		}
-		user.setPasswordHash(encoder.encode(req.password()));
+		String temporary = PasswordPolicy.generate();
+		user.setPasswordHash(encoder.encode(temporary));
+		user.setMustChangePassword(true);
+		return new TemporaryPassword(UserView.of(user), temporary);
 	}
 
 	@DeleteMapping("/{id}")
@@ -178,12 +177,6 @@ public class UserController {
 			errors.put("role", "Choose a role.");
 		}
 		return role;
-	}
-
-	static void password(String value, String key, Map<String, String> errors) {
-		if (value == null || value.length() < MIN_PASSWORD_LENGTH) {
-			errors.put(key, "Use at least " + MIN_PASSWORD_LENGTH + " characters.");
-		}
 	}
 
 }

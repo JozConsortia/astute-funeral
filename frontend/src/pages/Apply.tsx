@@ -1,5 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
 import { ApplicationForm } from '../components/ApplicationForm';
+import { Icon } from '../components/Icon';
 import { Seo } from '../components/Seo';
 import { site } from '../config/site';
 
@@ -43,9 +44,9 @@ export function Apply() {
             <div className="card">
               <h2 className="card__title">Need help?</h2>
               <p>Our consultants can complete the application with you over the phone.</p>
-              <p><a className="btn btn--outline btn--block" href={site.officeLink}>Office: {site.office}</a></p>
-              <p><a className="btn btn--outline btn--block" href={site.mobileLink}>Mobile: {site.mobile}</a></p>
-              <p><a className="btn btn--ghost btn--block" href={site.whatsappLink} target="_blank" rel="noopener">WhatsApp us</a></p>
+              <p><a className="btn btn--outline btn--block" href={site.officeLink}><Icon name="phone" /> Office: {site.office}</a></p>
+              <p><a className="btn btn--outline btn--block" href={site.mobileLink}><Icon name="phone" /> Mobile: {site.mobile}</a></p>
+              <p><a className="btn btn--whatsapp btn--block" href={site.whatsappLink} target="_blank" rel="noopener"><Icon name="whatsapp" /> WhatsApp us</a></p>
             </div>
             <p className="fineprint">
               Your information is encrypted in transit and is only used to process your application, in line with POPIA.

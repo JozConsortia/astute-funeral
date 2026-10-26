@@ -2,9 +2,13 @@ package za.co.astutefunerals.messages;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -166,7 +170,7 @@ public class ContactController {
 			try {
 				String subject = "Re: " + (message.getSubject() == null || message.getSubject().isBlank()
 						? "Your message to Astute Funerals" : message.getSubject());
-				mail.send(message.getEmail(), subject, body);
+				mail.send(message.getEmail(), subject, withOriginal(body, message, clock.getZone()));
 			}
 			catch (MailException ex) {
 				log.warn("Could not email reply for message {}", id, ex);
@@ -182,6 +186,14 @@ public class ContactController {
 	@DeleteMapping("/api/admin/messages/{id}")
 	public void delete(@PathVariable long id) {
 		messages.delete(find(id));
+	}
+
+	/** The reply followed by the person's own message, quoted the way email programs usually show it. */
+	static String withOriginal(String reply, ContactMessage message, ZoneId zone) {
+		String when = DateTimeFormatter.ofPattern("d MMMM yyyy 'at' HH:mm", Locale.ENGLISH)
+			.format(message.getCreatedAt().atZone(zone));
+		String quoted = message.getMessage().lines().map(line -> "> " + line).collect(Collectors.joining("\n"));
+		return reply + "\n\n-----\nOn " + when + ", " + message.getName() + " wrote:\n" + quoted;
 	}
 
 	private ContactMessage find(long id) {

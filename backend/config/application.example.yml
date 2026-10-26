@@ -1,0 +1,20 @@
+# Copy this file to config/application.yml (which git ignores) and fill in the password.
+# Spring Boot reads ./config/application.yml automatically when the backend starts.
+
+app:
+  mail:
+    from: Astute Funerals <astutefunerals@morokagroup.co.za>
+
+spring:
+  mail:
+    host: mail.morokagroup.co.za
+    port: 587
+    username: astutefunerals@morokagroup.co.za
+    password: ""
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000

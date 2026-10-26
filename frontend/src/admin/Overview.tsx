@@ -2,9 +2,22 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { formatDate, money } from '../lib/format';
+import { Icon, type IconName } from '../components/Icon';
 import type { Stats } from '../types';
 import { useAdmin } from './context';
 import { StatusPill } from './StatusPill';
+
+const LIST = '/admin/applications';
+
+interface Tile {
+  label: string;
+  value: string | number;
+  icon: IconName;
+  note: string;
+  tone?: 'new' | 'review' | 'approved' | 'declined' | 'gold' | 'alert';
+  /** Every tile opens the list it counts. */
+  to: string;
+}
 
 export function Overview() {
   const { meta, openApplication, refreshKey, setUnread, toast } = useAdmin();
@@ -19,15 +32,31 @@ export function Overview() {
       .catch((err: Error) => toast(err.message, 'error'));
   }, [refreshKey, setUnread, toast]);
 
-  const tiles: [string, string | number, boolean?, string?][] = stats
+  const month = new Date().toLocaleDateString('en-ZA', { month: 'long', year: 'numeric' });
+  const tiles: Tile[] = stats
     ? [
-        ['Total applications', stats.total],
-        ['New', stats.byStatus.NEW],
-        ['In review', stats.byStatus.IN_REVIEW],
-        ['Approved', stats.byStatus.APPROVED],
-        ['This month', stats.thisMonth],
-        ['Approved monthly premiums', money(stats.approvedPremium), true],
-        ['Messages awaiting reply', stats.awaitingReply, false, '/admin/messages'],
+        { label: 'Total applications', value: stats.total, icon: 'file', note: 'All time', to: LIST },
+        { label: 'New', value: stats.byStatus.NEW, icon: 'sparkle', note: 'Waiting to be reviewed', tone: 'new', to: `${LIST}?status=NEW` },
+        { label: 'In review', value: stats.byStatus.IN_REVIEW, icon: 'clock', note: 'Being checked', tone: 'review', to: `${LIST}?status=IN_REVIEW` },
+        { label: 'Approved', value: stats.byStatus.APPROVED, icon: 'check', note: 'Policies approved', tone: 'approved', to: `${LIST}?status=APPROVED` },
+        { label: 'Declined', value: stats.byStatus.DECLINED, icon: 'close', note: 'Not approved', tone: 'declined', to: `${LIST}?status=DECLINED` },
+        { label: 'This month', value: stats.thisMonth, icon: 'calendar', note: `Applications in ${month}`, to: `${LIST}?period=month` },
+        {
+          label: 'Monthly premiums',
+          value: money(stats.approvedPremium),
+          icon: 'wallet',
+          note: 'From approved policies',
+          tone: 'gold',
+          to: `${LIST}?status=APPROVED`,
+        },
+        {
+          label: 'Messages awaiting reply',
+          value: stats.awaitingReply,
+          icon: 'mail',
+          note: stats.awaitingReply > 0 ? 'Reply now' : 'All caught up',
+          tone: stats.awaitingReply > 0 ? 'alert' : undefined,
+          to: '/admin/messages',
+        },
       ]
     : [];
   const maxPlan = Math.max(1, ...(stats?.byPlan.map((p) => p.count) ?? []));
@@ -36,20 +65,22 @@ export function Overview() {
     <section>
       <div className="stats">
         {stats
-          ? tiles.map(([label, value, gold, to]) =>
-              to ? (
-                <Link className={`stat stat--link${Number(value) > 0 ? ' stat--alert' : ''}`} key={label} to={to}>
-                  <span className="stat__label">{label}</span>
-                  <span className="stat__value">{value}</span>
-                  <span className="stat__more">{Number(value) > 0 ? 'Reply now →' : 'All caught up'}</span>
+          ? tiles.map((t) => {
+              const className = `stat stat--link${t.tone ? ` stat--${t.tone}` : ''}`;
+              const body = (
+                <>
+                  <span className="stat__icon"><Icon name={t.icon} /></span>
+                  <span className="stat__label">{t.label}</span>
+                  <span className="stat__value">{t.value}</span>
+                  <span className="stat__note">{t.note}</span>
+                </>
+              );
+              return (
+                <Link className={className} key={t.label} to={t.to} aria-label={`${t.label}: ${t.value}. ${t.note}`}>
+                  {body}
                 </Link>
-              ) : (
-                <div className={`stat${gold ? ' stat--gold' : ''}`} key={label}>
-                  <span className="stat__label">{label}</span>
-                  <span className="stat__value">{value}</span>
-                </div>
-              ),
-            )
+              );
+            })
           : <p className="muted">Loading…</p>}
       </div>
 

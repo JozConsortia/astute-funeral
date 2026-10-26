@@ -22,3 +22,7 @@ export const labelOf = (options: Option[], value: string) => options.find((o) =>
 export const telLink = (phone: string) => `tel:${phone.replace(/[^\d+]/g, '')}`;
 
 export const capitalise = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
+
+/** "Thabo Mokoena" -> "TM" for avatar circles. */
+export const initials = (name: string) =>
+  name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]!.toUpperCase()).join('');

@@ -6,9 +6,10 @@ import { Seo } from '../components/Seo';
 import { site } from '../config/site';
 import { AUTH_EXPIRED_EVENT, api } from '../lib/api';
 import { useMeta } from '../lib/meta';
-import { labelOf } from '../lib/format';
+import { initials, labelOf } from '../lib/format';
 import type { Me, Stats } from '../types';
 import { ApplicationDetailModal } from './ApplicationDetail';
+import { FirstPassword } from './FirstPassword';
 import type { AdminContext } from './context';
 
 const NAV = [
@@ -76,6 +77,15 @@ export function AdminLayout() {
 
   if (!me || !meta) {
     return <div className="admin-loading">Loading…</div>;
+  }
+
+  if (me.mustChangePassword) {
+    const done = () => {
+      setMe({ ...me, mustChangePassword: false });
+      // The unread count was refused while the temporary password was in use.
+      api<Stats>('/api/admin/stats').then((s) => setUnread(s.awaitingReply)).catch(() => {});
+    };
+    return <FirstPassword name={me.fullName} onDone={done} onLogout={logout} />;
   }
 
   const isSuper = me.role === 'SUPER_ADMIN';
@@ -147,11 +157,3 @@ export function AdminLayout() {
   );
 }
 
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]!.toUpperCase())
-    .join('');
-}

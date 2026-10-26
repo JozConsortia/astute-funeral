@@ -299,8 +299,10 @@ function ReplyComposer({ message: m, onSent }: { message: ContactMessage; onSent
         </button>
       </div>
       <p className="composer__hint">
-        WhatsApp and email open with your reply already typed — just press send. Every reply is saved here so the team
-        can see who answered.
+        {me.emailEnabled
+          ? 'Send email delivers your reply straight to their inbox from the business address. WhatsApp opens with your reply already typed — press send there.'
+          : 'WhatsApp and email open with your reply already typed — just press send.'}{' '}
+        Every reply is saved here so the team can see who answered.
       </p>
     </div>
   );

@@ -21,7 +21,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
  * Re-checks the signed-in admin against the database on every admin request, so that a
- * deactivated or deleted user is signed out immediately and role changes apply at once.
+ * deactivated or deleted user is signed out immediately and role changes apply at once. A user
+ * who still has a temporary password can only load their profile and change the password.
  */
 public class AdminSessionFilter extends OncePerRequestFilter {
 
@@ -62,6 +63,14 @@ public class AdminSessionFilter extends OncePerRequestFilter {
 			return;
 		}
 
+		if (admin.get().isMustChangePassword() && !allowedBeforePasswordChange(request)) {
+			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+			response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+			response.getWriter()
+				.write("{\"error\":\"Please choose your own password before continuing.\",\"errors\":{}}");
+			return;
+		}
+
 		var current = admin.get().getRole().authorities();
 		if (!new HashSet<>(current).equals(new HashSet<>(auth.getAuthorities()))) {
 			// Role changed since sign-in: refresh the session's permissions.
@@ -71,6 +80,13 @@ public class AdminSessionFilter extends OncePerRequestFilter {
 			contextRepository.saveContext(context, request, response);
 		}
 		chain.doFilter(request, response);
+	}
+
+	private static boolean allowedBeforePasswordChange(HttpServletRequest request) {
+		String path = request.getRequestURI();
+		String method = request.getMethod();
+		return ("GET".equals(method) && "/api/admin/me".equals(path))
+				|| ("POST".equals(method) && ("/api/admin/password".equals(path) || "/api/admin/logout".equals(path)));
 	}
 
 }

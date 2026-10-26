@@ -1,30 +1,28 @@
 import { Link } from 'react-router-dom';
-import { CtaBand } from '../components/CtaBand';
+import { CallBack } from '../components/CallBack';
+import { Icon } from '../components/Icon';
 import { Reveal } from '../components/Reveal';
 import { Seo } from '../components/Seo';
 import { site } from '../config/site';
+import { thousands } from '../lib/format';
 import { useMeta } from '../lib/meta';
 
-const FEATURES = [
+const NEXT_STEPS = [
   {
-    title: 'Fast, reliable claims',
-    text: 'Valid claims are paid out within 48 hours so your family can focus on saying goodbye.',
-    icon: <><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z" /><path d="m9 12 2 2 4-4" /></>,
+    title: 'Call us, day or night',
+    text: `Phone ${site.emergency}. We come to you and take care of your loved one with dignity.`,
   },
   {
-    title: 'Whole-family cover',
-    text: 'Protect your spouse, children, parents and extended family on one simple monthly premium.',
-    icon: <><circle cx="9" cy="8" r="3.5" /><circle cx="17" cy="9" r="2.5" /><path d="M2.5 20c.6-3.6 3.3-6 6.5-6s5.9 2.4 6.5 6" /><path d="M15.5 14.2c2.8-.4 5.3 1.6 6 4.8" /></>,
+    title: 'Have the death confirmed',
+    text: 'A doctor confirms the death at home or in hospital. After an accident, the police are called (10111).',
   },
   {
-    title: 'Compassionate service',
-    text: 'Our caring team guides you through every step, from 24/7 pick-ups to the final farewell.',
-    icon: <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21.2l8.8-8.8a5.5 5.5 0 0 0 0-7.8Z" />,
+    title: 'We help with the paperwork',
+    text: 'We help you register the death at Home Affairs and get the death certificate.',
   },
   {
-    title: 'Affordable premiums',
-    text: 'Flexible payment by debit order, stop order or EFT, with no medical examinations required.',
-    icon: <><rect x="3" y="6" width="18" height="13" rx="2" /><path d="M3 10h18" /><path d="M7 15h3" /></>,
+    title: 'Claim your cover',
+    text: 'Bring the ID documents, the death certificate and the policy number. Valid claims are paid within 48 hours.',
   },
 ];
 
@@ -40,86 +38,78 @@ export function Home() {
         path="/"
       />
 
-      <section className="hero">
-        <div className="container hero__inner">
-          <Reveal className="hero__content">
-            <p className="eyebrow">Funeral cover from R{minPremium} per month</p>
+      <section className="hero hero--simple">
+        <div className="container">
+          <Reveal className="hero__intro">
             <h1 className="hero__title">
               Honour every life with <em>Class in Dignity</em>
             </h1>
-            <p className="hero__lead">
-              Affordable funeral policies for you, your spouse, your children and your extended family &mdash; and a caring
-              team ready to help, day or night, when your family needs us most.
-            </p>
-            <div className="hero__actions">
-              <Link className="btn btn--gold btn--lg" to="/get-covered">View our plans</Link>
-              <Link className="btn btn--outline btn--lg" to="/apply">Apply online</Link>
-            </div>
-            <ul className="hero__trust">
-              <li><strong>48h</strong> claims payout</li>
-              <li><strong>No</strong> medical exams</li>
-              <li><strong>24/7</strong> emergency pick-ups</li>
-            </ul>
+            <p className="hero__lead">How can we help you today?</p>
           </Reveal>
-          <Reveal className="hero__visual">
-            <img className="hero__logo" src="/img/logo.png" alt="" width={749} height={653} fetchPriority="high" />
+
+          <Reveal className="doors">
+            <article className="door door--urgent">
+              <h2 className="door__title">Someone has passed away</h2>
+              <p>We are here 24 hours a day. Call us now and we will guide you through every step.</p>
+              <a className="btn btn--gold btn--lg btn--block" href={site.emergencyLink}><Icon name="phone" /> Call {site.emergency}</a>
+              <a className="door__link" href="#next-steps">What to do next &darr;</a>
+            </article>
+            <article className="door">
+              <h2 className="door__title">Plan ahead for my family</h2>
+              <p>Funeral cover from R{minPremium} a month for you and your loved ones. No medical exams.</p>
+              <Link className="btn btn--gold btn--lg btn--block" to="/get-covered">See our plans</Link>
+              <Link className="door__link" to="/apply">Or apply online now &rarr;</Link>
+            </article>
           </Reveal>
+
+          <ul className="hero__trust">
+            <li>Claims paid within 48 hours</li>
+            <li>No medical exams</li>
+            <li>24/7 pick-ups</li>
+          </ul>
         </div>
       </section>
 
-      <section className="section section--light" aria-labelledby="help-title">
+      <section className="section section--light" id="next-steps" aria-labelledby="next-title">
         <div className="container">
           <Reveal as="header" className="section__head">
-            <p className="eyebrow">How can we help?</p>
-            <h2 className="section__title" id="help-title">Everything you need, in one place</h2>
+            <p className="eyebrow">When someone passes away</p>
+            <h2 className="section__title" id="next-title">What to do next</h2>
+            <p className="section__lead">Take it one step at a time. We are with you for all of it.</p>
           </Reveal>
-          <Reveal className="steps">
-            <Link className="step step--link" to="/get-covered">
-              <span className="step__num">01</span>
-              <h3 className="step__title">Get covered</h3>
-              <p>Compare our single, family and extended family plans, from R{minPremium} per month.</p>
-              <span className="step__more">View plans &rarr;</span>
-            </Link>
-            <Link className="step step--link" to="/apply">
-              <span className="step__num">02</span>
-              <h3 className="step__title">Apply online</h3>
-              <p>Complete our secure application in about 10 minutes &mdash; no paperwork, no medical exams.</p>
-              <span className="step__more">Start application &rarr;</span>
-            </Link>
-            <Link className="step step--link" to="/contact">
-              <span className="step__num">03</span>
-              <h3 className="step__title">Talk to us</h3>
-              <p>Questions, claims or emergency pick-ups &mdash; our team is here for you 24 hours a day.</p>
-              <span className="step__more">Contact us &rarr;</span>
-            </Link>
-          </Reveal>
-        </div>
-      </section>
-
-      <section className="section" aria-labelledby="why-title">
-        <div className="container">
-          <Reveal as="header" className="section__head">
-            <p className="eyebrow">Why families choose us</p>
-            <h2 className="section__title" id="why-title">Here for you when it matters most</h2>
-          </Reveal>
-          <Reveal className="features">
-            {FEATURES.map((f) => (
-              <article className="feature" key={f.title}>
-                <span className="feature__icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24">{f.icon}</svg>
-                </span>
-                <h3 className="feature__title">{f.title}</h3>
-                <p>{f.text}</p>
-              </article>
+          <Reveal as="ol" className="steps steps--four">
+            {NEXT_STEPS.map((s, i) => (
+              <li className="step" key={s.title}>
+                <span className="step__num">{i + 1}</span>
+                <h3 className="step__title">{s.title}</h3>
+                <p>{s.text}</p>
+              </li>
             ))}
           </Reveal>
         </div>
       </section>
 
-      <CtaBand title="Give your family peace of mind today" text="Compare our plans or speak to a consultant.">
-        <Link className="btn btn--dark btn--lg" to="/get-covered">Get covered</Link>
-        <a className="btn btn--dark-outline btn--lg" href={site.officeLink}>Call {site.office}</a>
-      </CtaBand>
+      <section className="section" aria-labelledby="plans-title">
+        <div className="container">
+          <Reveal as="header" className="section__head">
+            <p className="eyebrow">Our funeral plans</p>
+            <h2 className="section__title" id="plans-title">Simple cover, one monthly price</h2>
+          </Reveal>
+          <Reveal className="plan-strip">
+            {(meta?.plans ?? []).map((p) => (
+              <Link className={`plan-mini${p.featured ? ' plan-mini--featured' : ''}`} to={`/apply?plan=${p.id}`} key={p.id}>
+                <span className="plan-mini__name">{p.name}</span>
+                <span className="plan-mini__price">R{p.premium}<small>/month</small></span>
+                <span className="plan-mini__cover">R{thousands(p.cover)} cover &middot; {p.summary}</span>
+                <span className="plan-mini__go">Apply &rarr;</span>
+              </Link>
+            ))}
+          </Reveal>
+          <p className="plan-strip__more"><Link to="/get-covered">Compare the plans in full &rarr;</Link></p>
+        </div>
+      </section>
+
+      <CallBack />
     </>
   );
 }

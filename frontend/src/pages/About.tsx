@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { CtaBand } from '../components/CtaBand';
+import { Icon, type IconName } from '../components/Icon';
 import { Reveal } from '../components/Reveal';
 import { Seo } from '../components/Seo';
 import { site } from '../config/site';
@@ -11,15 +12,15 @@ const VALUES = [
   ['Reliability', 'Fast claims and a team you can reach day or night.'],
 ];
 
-const BENEFITS = [
-  'Funeral arrangements & coffin',
-  'Transport of the deceased',
-  'Repatriation within South Africa',
-  'Tent, chairs & catering',
-  'Grocery benefit',
-  'Tombstone benefit',
-  'Memorial programmes',
-  'Cash payout to your beneficiary',
+const BENEFITS: { label: string; icon: IconName }[] = [
+  { label: 'Funeral arrangements & coffin', icon: 'heart' },
+  { label: 'Transport of the deceased', icon: 'car' },
+  { label: 'Repatriation within South Africa', icon: 'pin' },
+  { label: 'Tent, chairs & catering', icon: 'tent' },
+  { label: 'Grocery benefit', icon: 'cart' },
+  { label: 'Tombstone benefit', icon: 'tombstone' },
+  { label: 'Memorial programmes', icon: 'book' },
+  { label: 'Cash payout to your beneficiary', icon: 'wallet' },
 ];
 
 export function About() {
@@ -106,7 +107,15 @@ export function About() {
             <p className="section__lead">Depending on your plan, your cover can be used for the services your family needs.</p>
           </Reveal>
           <Reveal as="ul" className="benefits">
-            {BENEFITS.map((b) => <li key={b}>{b}</li>)}
+            {BENEFITS.map((b) => (
+              <li key={b.label}>
+                <Link className="benefits__link" to="/get-covered">
+                  <span className="benefits__icon"><Icon name={b.icon} /></span>
+                  {b.label}
+                  <span className="benefits__more">See plans &rarr;</span>
+                </Link>
+              </li>
+            ))}
           </Reveal>
         </div>
       </section>

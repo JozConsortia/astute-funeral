@@ -164,6 +164,8 @@ export interface Me {
   role: AdminRole;
   /** True when the server can send email replies itself (SMTP configured). */
   emailEnabled: boolean;
+  /** Still using a temporary password from a super admin; must choose their own first. */
+  mustChangePassword: boolean;
 }
 
 export interface AdminUser {
@@ -173,8 +175,15 @@ export interface AdminUser {
   email: string | null;
   role: AdminRole;
   active: boolean;
+  mustChangePassword: boolean;
   createdAt: string;
   lastLoginAt: string | null;
+}
+
+/** Returned when a user is added or their password is reset; the password is shown only once. */
+export interface TemporaryPassword {
+  user: AdminUser;
+  temporaryPassword: string;
 }
 
 export type FieldErrors = Record<string, string>;

@@ -60,19 +60,20 @@ public class ApplicationController {
 	@GetMapping("/api/admin/applications")
 	public PageResult<Summary> list(@RequestParam(required = false) String q,
 			@RequestParam(required = false) String status, @RequestParam(required = false) String plan,
-			@RequestParam(defaultValue = "1") int page) {
-		return service.search(Filter.of(q, status, plan), page);
+			@RequestParam(required = false) String period, @RequestParam(defaultValue = "1") int page) {
+		return service.search(Filter.of(q, status, plan, period), page);
 	}
 
-	@GetMapping("/api/admin/applications.csv")
-	public ResponseEntity<String> export(@RequestParam(required = false) String q,
-			@RequestParam(required = false) String status, @RequestParam(required = false) String plan) {
-		String csv = CsvExporter.toCsv(service.searchAll(Filter.of(q, status, plan)));
+	@GetMapping("/api/admin/applications.xlsx")
+	public ResponseEntity<byte[]> export(@RequestParam(required = false) String q,
+			@RequestParam(required = false) String status, @RequestParam(required = false) String plan,
+			@RequestParam(required = false) String period) {
+		byte[] xlsx = ExcelExporter.toXlsx(service.searchAll(Filter.of(q, status, plan, period)));
 		return ResponseEntity.ok()
 			.header(HttpHeaders.CONTENT_DISPOSITION,
-					"attachment; filename=\"applications-" + LocalDate.now() + ".csv\"")
-			.contentType(new MediaType("text", "csv", java.nio.charset.StandardCharsets.UTF_8))
-			.body(csv);
+					"attachment; filename=\"applications-" + LocalDate.now() + ".xlsx\"")
+			.contentType(MediaType.parseMediaType(ExcelExporter.CONTENT_TYPE))
+			.body(xlsx);
 	}
 
 	@PostMapping("/api/admin/applications")

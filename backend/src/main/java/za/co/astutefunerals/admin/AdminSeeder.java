@@ -1,9 +1,7 @@
 package za.co.astutefunerals.admin;
 
-import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Base64;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,15 +46,16 @@ class AdminSeeder implements ApplicationRunner {
 		}
 		String username = properties.admin().username();
 		String password = properties.admin().password();
-		if (password == null || password.isBlank()) {
-			byte[] bytes = new byte[9];
-			new SecureRandom().nextBytes(bytes);
-			password = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-			log.warn("No ADMIN_PASSWORD set - generated super admin login: username '{}' password '{}'. "
-					+ "Sign in at /admin and change it under Settings.", username, password);
+		boolean generated = password == null || password.isBlank();
+		if (generated) {
+			password = PasswordPolicy.generate();
+			log.warn("No ADMIN_PASSWORD set - generated temporary super admin login: username '{}' password '{}'. "
+					+ "Sign in at /admin and you will be asked to choose your own password.", username, password);
 		}
-		admins.save(new AdminUser(username, encoder.encode(password), "Super Administrator", null,
-				AdminRole.SUPER_ADMIN, Instant.now(clock)));
+		AdminUser admin = new AdminUser(username, encoder.encode(password), "Super Administrator", null,
+				AdminRole.SUPER_ADMIN, Instant.now(clock));
+		admin.setMustChangePassword(generated);
+		admins.save(admin);
 		log.info("Created super admin account '{}'", username);
 	}
 

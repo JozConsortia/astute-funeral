@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Field, FormAlert } from '../components/Field';
-import { PasswordInput } from '../components/PasswordInput';
 import { ApiError, api } from '../lib/api';
-import { formatDateTime, labelOf } from '../lib/format';
-import type { AdminRole, AdminUser, FieldErrors } from '../types';
+import { formatDateTime, initials, labelOf } from '../lib/format';
+import type { AdminRole, AdminUser, FieldErrors, TemporaryPassword } from '../types';
 import { useAdmin } from './context';
 import { Modal } from './Modal';
 
@@ -13,17 +12,12 @@ const ROLE_INFO: Record<AdminRole, string> = {
   SUPER_ADMIN: 'Everything an admin can do, plus adding, editing and removing users.',
 };
 
-/** 12 characters without look-alikes (0/O, 1/l/I) so it is easy to read out over the phone. */
-function generatePassword() {
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-  const bytes = crypto.getRandomValues(new Uint8Array(12));
-  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join('');
-}
-
-const initials = (name: string) =>
-  name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]!.toUpperCase()).join('');
-
-type Dialog = { kind: 'create' } | { kind: 'edit'; user: AdminUser } | { kind: 'password'; user: AdminUser } | null;
+type Dialog =
+  | { kind: 'create' }
+  | { kind: 'edit'; user: AdminUser }
+  | { kind: 'password'; user: AdminUser }
+  | { kind: 'temporary'; result: TemporaryPassword; isNew: boolean }
+  | null;
 
 export function Users() {
   const { me, isSuper, meta, toast } = useAdmin();
@@ -42,10 +36,21 @@ export function Users() {
   if (!isSuper) return <Navigate to="/admin" replace />;
 
   async function remove(user: AdminUser) {
-    if (!window.confirm(`Remove ${user.fullName}'s access permanently? This cannot be undone.`)) return;
+    if (!window.confirm(`Delete ${user.fullName}'s account permanently? This cannot be undone.`)) return;
     try {
       await api(`/api/admin/users/${user.id}`, 'DELETE');
-      toast(`${user.fullName} has been removed.`);
+      toast(`${user.fullName}'s account has been deleted.`);
+      load();
+    } catch (err) {
+      toast((err as Error).message, 'error');
+    }
+  }
+
+  async function setActive(user: AdminUser, active: boolean) {
+    if (!active && !window.confirm(`Deactivate ${user.fullName}? They will be signed out and cannot sign in until you activate them again.`)) return;
+    try {
+      await api(`/api/admin/users/${user.id}`, 'PATCH', { fullName: user.fullName, email: user.email ?? '', role: user.role, active });
+      toast(active ? `${user.fullName} can sign in again.` : `${user.fullName} has been deactivated.`);
       load();
     } catch (err) {
       toast((err as Error).message, 'error');
@@ -105,7 +110,10 @@ export function Users() {
                       <td data-label="Email">{u.email ? <a href={`mailto:${u.email}`}>{u.email}</a> : <span className="muted">–</span>}</td>
                       <td data-label="Role"><span className={`role-pill role-pill--${u.role.toLowerCase()}`}>{labelOf(meta.adminRoles, u.role)}</span></td>
                       <td data-label="Status">
-                        <span className={`status ${u.active ? 'status--approved' : 'status--declined'}`}>{u.active ? 'Active' : 'Deactivated'}</span>
+                        <span className="status-stack">
+                          <span className={`status ${u.active ? 'status--approved' : 'status--declined'}`}>{u.active ? 'Active' : 'Deactivated'}</span>
+                          {u.mustChangePassword && <span className="temp-tag" title="Has not chosen their own password yet">Temporary password</span>}
+                        </span>
                       </td>
                       <td data-label="Last sign-in">{u.lastLoginAt ? formatDateTime(u.lastLoginAt) : <span className="muted">Never</span>}</td>
                       <td className="table__actions">
@@ -113,7 +121,14 @@ export function Users() {
                           <button className="btn btn--outline btn--sm" type="button" onClick={() => setDialog({ kind: 'edit', user: u })}>Edit</button>
                           <button className="btn btn--ghost btn--sm" type="button" onClick={() => setDialog({ kind: 'password', user: u })}>Reset password</button>
                           {!isMe && (
-                            <button className="btn btn--danger btn--sm" type="button" onClick={() => remove(u)}>Remove</button>
+                            u.active ? (
+                              <button className="btn btn--ghost btn--sm" type="button" onClick={() => setActive(u, false)}>Deactivate</button>
+                            ) : (
+                              <button className="btn btn--outline btn--sm" type="button" onClick={() => setActive(u, true)}>Activate</button>
+                            )
+                          )}
+                          {!isMe && (
+                            <button className="btn btn--danger btn--sm" type="button" onClick={() => remove(u)}>Delete</button>
                           )}
                         </span>
                       </td>
@@ -136,17 +151,24 @@ export function Users() {
             setDialog(null);
             load();
           }}
+          onCreated={(result) => {
+            setDialog({ kind: 'temporary', result, isNew: true });
+            load();
+          }}
         />
       )}
       {dialog?.kind === 'password' && (
         <PasswordDialog
           user={dialog.user}
           onClose={() => setDialog(null)}
-          onSaved={(message) => {
-            toast(message);
-            setDialog(null);
+          onReset={(result) => {
+            setDialog({ kind: 'temporary', result, isNew: false });
+            load();
           }}
         />
+      )}
+      {dialog?.kind === 'temporary' && (
+        <TemporaryPasswordDialog result={dialog.result} isNew={dialog.isNew} onClose={() => setDialog(null)} />
       )}
     </section>
   );
@@ -159,9 +181,10 @@ interface UserDialogProps {
   isMe: boolean;
   onClose: () => void;
   onSaved: (message: string) => void;
+  onCreated: (result: TemporaryPassword) => void;
 }
 
-function UserDialog({ user, isMe, onClose, onSaved }: UserDialogProps) {
+function UserDialog({ user, isMe, onClose, onSaved, onCreated }: UserDialogProps) {
   const { meta } = useAdmin();
   const editing = Boolean(user);
   const [form, setForm] = useState({
@@ -170,12 +193,10 @@ function UserDialog({ user, isMe, onClose, onSaved }: UserDialogProps) {
     email: user?.email ?? '',
     role: (user?.role ?? 'ADMIN') as AdminRole,
     active: user?.active ?? true,
-    password: '',
   });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [alert, setAlert] = useState('');
   const [saving, setSaving] = useState(false);
-  const [generated, setGenerated] = useState(0);
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -196,14 +217,13 @@ function UserDialog({ user, isMe, onClose, onSaved }: UserDialogProps) {
         });
         onSaved(`${form.fullName}'s details have been updated.`);
       } else {
-        await api('/api/admin/users', 'POST', {
+        const result = await api<TemporaryPassword>('/api/admin/users', 'POST', {
           fullName: form.fullName,
           username: form.username,
           email: form.email,
           role: form.role,
-          password: form.password,
         });
-        onSaved(`${form.fullName} can now sign in as "${form.username.toLowerCase()}".`);
+        onCreated(result);
       }
     } catch (err) {
       if (err instanceof ApiError) setErrors(err.errors);
@@ -272,15 +292,10 @@ function UserDialog({ user, isMe, onClose, onSaved }: UserDialogProps) {
         )}
 
         {!editing && (
-          <Field label="Temporary password" htmlFor="u-password" required error={errors.password}
-            help="Share it with the person securely. They can change it under My account after signing in.">
-            <div className="password-row">
-              <PasswordInput id="u-password" value={form.password} autoComplete="new-password" revealKey={generated}
-                onChange={(e) => set('password', e.target.value)} />
-              <button className="btn btn--outline btn--sm" type="button"
-                onClick={() => { set('password', generatePassword()); setGenerated((n) => n + 1); }}>Generate</button>
-            </div>
-          </Field>
+          <p className="notice">
+            A temporary password is created automatically when you add the user. They must choose their own strong
+            password the first time they sign in.
+          </p>
         )}
       </form>
     </Modal>
@@ -289,21 +304,17 @@ function UserDialog({ user, isMe, onClose, onSaved }: UserDialogProps) {
 
 // ---------------------------------------------------------------- reset password
 
-function PasswordDialog({ user, onClose, onSaved }: { user: AdminUser; onClose: () => void; onSaved: (message: string) => void }) {
-  const [password, setPassword] = useState('');
+function PasswordDialog({ user, onClose, onReset }: { user: AdminUser; onClose: () => void; onReset: (result: TemporaryPassword) => void }) {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [generated, setGenerated] = useState(0);
 
-  async function save(e: FormEvent) {
+  async function reset(e: FormEvent) {
     e.preventDefault();
     setSaving(true);
     try {
-      await api(`/api/admin/users/${user.id}/password`, 'POST', { password });
-      onSaved(`Password reset for ${user.fullName}.`);
+      onReset(await api<TemporaryPassword>(`/api/admin/users/${user.id}/password`, 'POST'));
     } catch (err) {
-      setError(err instanceof ApiError ? err.errors.password ?? err.message : (err as Error).message);
-    } finally {
+      setError((err as Error).message);
       setSaving(false);
     }
   }
@@ -317,22 +328,58 @@ function PasswordDialog({ user, onClose, onSaved }: { user: AdminUser; onClose: 
         <>
           <button className="btn btn--ghost btn--sm" type="button" onClick={onClose}>Cancel</button>
           <button className="btn btn--gold btn--sm" type="submit" form="password-form" disabled={saving}>
-            {saving ? 'Saving…' : 'Set new password'}
+            {saving ? 'Resetting…' : 'Reset password'}
           </button>
         </>
       }
     >
-      <form id="password-form" className="stack" onSubmit={save} noValidate>
-        <p className="muted">Choose a new temporary password for {user.fullName} and share it with them securely.</p>
-        <Field label="New password (min. 10 characters)" htmlFor="r-password" error={error}>
-          <div className="password-row">
-            <PasswordInput id="r-password" value={password} autoComplete="new-password" autoFocus revealKey={generated}
-              onChange={(e) => { setPassword(e.target.value); setError(''); }} />
-            <button className="btn btn--outline btn--sm" type="button"
-              onClick={() => { setPassword(generatePassword()); setError(''); setGenerated((n) => n + 1); }}>Generate</button>
-          </div>
-        </Field>
+      <form id="password-form" className="stack" onSubmit={reset} noValidate>
+        <FormAlert message={error} />
+        <p>
+          {user.fullName} will get a new temporary password. Their current password stops working straight away, and
+          they must choose their own password when they next sign in.
+        </p>
       </form>
+    </Modal>
+  );
+}
+
+// ---------------------------------------------------------------- temporary password (shown once)
+
+function TemporaryPasswordDialog({ result, isNew, onClose }: { result: TemporaryPassword; isNew: boolean; onClose: () => void }) {
+  const { user, temporaryPassword } = result;
+  const [copied, setCopied] = useState(false);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(`Username: ${user.username}\nTemporary password: ${temporaryPassword}`);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  return (
+    <Modal
+      title={isNew ? `${user.fullName} has been added` : 'New temporary password'}
+      subtitle={isNew ? 'Sign-in details' : user.fullName}
+      onClose={onClose}
+      footer={<button className="btn btn--gold btn--sm" type="button" onClick={onClose}>Done</button>}
+    >
+      <div className="stack">
+        <p>
+          Give these details to {user.fullName.split(' ')[0]} in person or by phone. They will be asked to choose their own
+          password when they sign in.
+        </p>
+        <dl className="credentials">
+          <div><dt>Username</dt><dd>{user.username}</dd></div>
+          <div><dt>Temporary password</dt><dd className="credentials__password">{temporaryPassword}</dd></div>
+        </dl>
+        <button className="btn btn--outline btn--sm credentials__copy" type="button" onClick={copy}>
+          {copied ? 'Copied ✓' : 'Copy sign-in details'}
+        </button>
+        <p className="notice notice--warning">This password is shown only once. You will not be able to see it again.</p>
+      </div>
     </Modal>
   );
 }

@@ -37,3 +37,6 @@ src/main/resources/static/
 
 ### Local H2 database ###
 data/
+
+### Local secrets (mail password etc.) - Spring Boot reads ./config/application.yml automatically ###
+config/application.yml

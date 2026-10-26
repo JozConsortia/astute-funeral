@@ -65,7 +65,8 @@ public class AuthController {
 	public record ProfileRequest(String fullName, String email) {
 	}
 
-	public record Me(String username, String fullName, String email, AdminRole role, boolean emailEnabled) {
+	public record Me(String username, String fullName, String email, AdminRole role, boolean emailEnabled,
+			boolean mustChangePassword) {
 	}
 
 	/** Touching the token makes Spring Security send the XSRF-TOKEN cookie. */
@@ -130,12 +131,16 @@ public class AuthController {
 			throw new ValidationException("Your current password is incorrect.",
 					Map.of("current", "Incorrect password."));
 		}
-		Map<String, String> errors = new LinkedHashMap<>();
-		UserController.password(req.next(), "next", errors);
-		if (!errors.isEmpty()) {
-			throw new ValidationException("Use at least " + UserController.MIN_PASSWORD_LENGTH + " characters.", errors);
+		var problem = PasswordPolicy.check(req.next());
+		if (problem.isPresent()) {
+			throw new ValidationException(problem.get(), Map.of("next", problem.get()));
+		}
+		if (encoder.matches(req.next(), admin.getPasswordHash())) {
+			String message = "Choose a new password that is different from your current one.";
+			throw new ValidationException(message, Map.of("next", message));
 		}
 		admin.setPasswordHash(encoder.encode(req.next()));
+		admin.setMustChangePassword(false);
 	}
 
 	private AdminUser current(Authentication auth) {
@@ -144,7 +149,8 @@ public class AuthController {
 	}
 
 	private Me me(AdminUser a) {
-		return new Me(a.getUsername(), a.getFullName(), a.getEmail(), a.getRole(), mail.isEnabled());
+		return new Me(a.getUsername(), a.getFullName(), a.getEmail(), a.getRole(), mail.isEnabled(),
+				a.isMustChangePassword());
 	}
 
 }
