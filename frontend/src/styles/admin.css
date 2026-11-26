@@ -41,7 +41,7 @@
   overflow-y: auto;
 }
 .admin-sidebar .brand { padding: 0 8px; }
-.admin-sidebar .brand__mark { width: 62px; }
+.admin-sidebar .brand__mark { width: 70px; }
 .admin-sidebar .brand__name { font-size: 1.02rem; }
 .admin-sidebar .brand__tagline { font-size: 1rem; }
 .admin-nav { display: grid; gap: 4px; }
@@ -257,14 +257,36 @@
   font-size: .92rem; font-weight: 500;
 }
 .toast--success { background: var(--gold-gradient); color: var(--black); }
-.toast--error { background: var(--danger); color: var(--heading); }
+.toast--error { background: #b3261e; color: #ffffff; }
 
 /* ---------- print (application detail) ---------- */
 
+/* Logo and business details at the top of a printed application (deep-gold logo reads well on paper). */
+.print-letterhead { display: none; }
+
 @media print {
-  .admin-shell, .toast, .modal__close, .modal__foot { display: none !important; }
+  .print-letterhead {
+    display: flex; align-items: center; gap: 20px;
+    padding: 0 24px 14px; margin: 0 0 6px; border-bottom: 2px solid #a97c14;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .print-letterhead img { width: 130px; height: auto; flex: none; }
+  .print-letterhead__text { display: grid; gap: 1px; font-size: 9.5pt; line-height: 1.4; color: #333; }
+  .print-letterhead__text strong { font-family: var(--font-display); font-size: 14pt; color: #000; }
+  /* The dialog is inside .admin-shell, so hide the shell's other parts rather than the shell itself
+     (hiding the shell hid the dialog too and printed a blank page). */
+  .admin-sidebar, .admin-main, .admin-backdrop, .toast, .modal__close, .modal__foot { display: none !important; }
+  .admin-shell { display: block; min-height: 0; }
   body.admin { background: #fff; }
-  .modal { position: static; display: block; width: 100%; max-height: none; border: 0; box-shadow: none; background: #fff; color: #000; overflow: visible; }
+  @page { margin: 12mm; }
+  /* Pinned to the top: a centred dialog taller than the page would lose its letterhead off the top. */
+  .modal { position: absolute; top: 0; left: 0; margin: 0; display: block; width: 100%; max-width: none; max-height: none; border: 0; box-shadow: none; background: #fff; color: #000; overflow: visible; }
+  .modal__head { padding-top: 14px; padding-bottom: 10px; }
+  .modal__body { padding-top: 14px; font-size: 10.5pt; }
+  .details { gap: 3px 20px; }
+  .detail-banner { margin-bottom: 12px; }
+  .detail-section + .detail-section { margin-top: 12px; padding-top: 10px; }
+  .detail-section__title { margin-bottom: 6px; }
   .modal::backdrop { display: none; }
   .modal__body { overflow: visible; }
   .modal__title, .details dd, .table td { color: #000 !important; }

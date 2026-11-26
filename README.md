@@ -49,7 +49,7 @@ Every page has a floating 24/7 emergency call button and works on phones.
 | Section | Purpose |
 |---|---|
 | **Overview** | Eight equal tiles (total, new, in review, approved, declined, this month, approved premiums, messages awaiting reply). Each tile opens the matching filtered list. |
-| **Applications** | Search and filter by status, plan and date; open, review, approve, decline or delete; **Export to Excel**. |
+| **Applications** | Search and filter by status, plan and date; open, review, approve, decline or delete; **Print** on a logo letterhead; **Export to Excel**. |
 | **Capture applicant** | Staff fill in the same application form for walk-in or telephone clients. |
 | **Messages** | Contact-form messages and call-back requests, with quick-reply templates and replies by email, WhatsApp or phone. |
 | **Users** *(super admins)* | Add team members, change roles, reset passwords, deactivate or delete accounts. |
@@ -333,9 +333,10 @@ The backend suite covers:
 | Plans, prices, cover amounts, dependant limits | [`backend/src/main/resources/application.yml`](backend/src/main/resources/application.yml) → `app.plans` |
 | Phone numbers, email, address, hours, FSP number | [`frontend/src/config/site.ts`](frontend/src/config/site.ts) and the structured data in [`frontend/index.html`](frontend/index.html) |
 | Page text | [`frontend/src/pages/`](frontend/src/pages/) |
+| Beneficiary relationship choices (the list before "Other") | [`ApplicationForm.tsx`](frontend/src/components/ApplicationForm.tsx) → `BENEFICIARY_RELATIONSHIPS` |
 | Colours and fonts | [`frontend/src/styles/styles.css`](frontend/src/styles/styles.css) (tokens at the top); dashboard in `admin.css` |
 | Icons | [`frontend/src/components/Icon.tsx`](frontend/src/components/Icon.tsx) |
-| Logo and images | [`frontend/public/img/`](frontend/public/img/) |
+| Logo and images | [`frontend/public/img/`](frontend/public/img/): `logo.png` (bright gold, for black backgrounds), `logo-deep.png` (deep gold, for white backgrounds and printouts), `emblem.png` (the mark in the header and admin sidebar). Replacements need a **solid** transparent background; a logo cut out of black by brightness turns pale and see-through on white. |
 | Form rules | [`ApplicationValidator.java`](backend/src/main/java/za/co/astutefunerals/applications/ApplicationValidator.java) (server) and [`validation.ts`](frontend/src/lib/validation.ts) (instant feedback) |
 | Password rules | [`PasswordPolicy.java`](backend/src/main/java/za/co/astutefunerals/admin/PasswordPolicy.java) and [`passwordRules.ts`](frontend/src/lib/passwordRules.ts) (keep the two in step) |
 

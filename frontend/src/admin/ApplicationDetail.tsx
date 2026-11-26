@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { fullAddress, site } from '../config/site';
 import { api } from '../lib/api';
 import { capitalise, formatDateTime, labelOf, money, telLink } from '../lib/format';
 import type { ApplicationDetail, Meta, Status } from '../types';
@@ -100,6 +101,17 @@ export function ApplicationDetailModal({ id, meta, onClose, onChanged, onError }
       onClose={onClose}
       onClick={(e) => e.target === dialog.current && dialog.current?.close()}
     >
+      {/* Letterhead: hidden on screen, printed at the top of the application. */}
+      <div className="print-letterhead" aria-hidden="true">
+        <img src="/img/logo-deep.png" alt="" width={480} height={414} />
+        <div className="print-letterhead__text">
+          <strong>{site.name}</strong>
+          <span>{fullAddress}</span>
+          <span>Office {site.office} · 24/7 emergency {site.emergency}</span>
+          <span>{site.email}</span>
+          <span>{site.fsp}</span>
+        </div>
+      </div>
       <div className="modal__head">
         <div>
           <p className="modal__ref">{app?.reference ?? ' '}</p>

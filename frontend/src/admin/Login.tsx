@@ -46,7 +46,7 @@ export function Login() {
       <Seo title={`Admin sign in | ${site.name}`} description="Administrator area" path="/admin/login" noindex />
       <div className="login__card">
         <Link className="login__logo" to="/" aria-label={`${site.name} website`}>
-          <img src="/img/logo.png" alt={`${site.name} - ${site.tagline}`} width={749} height={653} />
+          <img src="/img/logo.png" alt={`${site.name} - ${site.tagline}`} width={749} height={646} />
         </Link>
         <h1 className="login__title">Admin sign in</h1>
         <form onSubmit={submit} noValidate>

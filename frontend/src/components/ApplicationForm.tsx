@@ -19,6 +19,14 @@ interface ApplicationFormProps {
 const STEPS = ['Plan', 'Main member', 'Family', 'Confirm'];
 const EXTENDED = ['PARENT', 'PARENT_IN_LAW', 'SIBLING', 'GRANDPARENT', 'OTHER_EXTENDED'];
 
+/** Choices for the beneficiary's "Relationship to you". Anything else is typed in after picking "Other". */
+const BENEFICIARY_RELATIONSHIPS = [
+  'Spouse', 'Partner', 'Son', 'Daughter', 'Mother', 'Father', 'Brother', 'Sister',
+  'Grandson', 'Granddaughter', 'Grandmother', 'Grandfather', 'Aunt', 'Uncle', 'Niece', 'Nephew', 'Cousin',
+  'Son-in-law', 'Daughter-in-law',
+];
+const OTHER_RELATIONSHIP = '__other';
+
 const emptyBeneficiary: BeneficiaryInput = { firstName: '', lastName: '', idNumber: '', relationship: '', phone: '' };
 const emptyDependant: DependantInput = { relationship: '', firstName: '', lastName: '', idNumber: '', dateOfBirth: '' };
 
@@ -159,12 +167,18 @@ export function ApplicationForm({ endpoint, mode, initialPlan = '', onCreated }:
     if (meta && data.plan && !meta.plans.some((p) => p.id === data.plan)) setData((d) => ({ ...d, plan: '' }));
   }, [meta, data.plan]);
 
-  // Move focus to the first invalid control whenever errors are shown.
+  // Move focus to the first invalid control when Continue / Submit finds errors. Only then: following every
+  // change to `errors` pulled the cursor away after one keystroke whenever fixing a field cleared its error.
+  const [errorAttempt, setErrorAttempt] = useState(0);
+  const showErrors = (found: FieldErrors) => {
+    setErrors(found);
+    setErrorAttempt((n) => n + 1);
+  };
   useEffect(() => {
-    if (Object.keys(errors).length) {
+    if (errorAttempt) {
       hostRef.current?.querySelector<HTMLElement>('.has-error input, .has-error select, .has-error textarea')?.focus();
     }
-  }, [errors]);
+  }, [errorAttempt]);
 
   const clearError = (key: string) =>
     setErrors((e) => {
@@ -200,8 +214,12 @@ export function ApplicationForm({ endpoint, mode, initialPlan = '', onCreated }:
 
   function next() {
     const found = validateStep(step, data, plan);
-    setErrors(found);
-    if (!Object.keys(found).length) goTo(step + 1);
+    if (Object.keys(found).length) {
+      showErrors(found);
+      return;
+    }
+    setErrors({});
+    goTo(step + 1);
   }
 
   async function submit(e: FormEvent) {
@@ -211,7 +229,7 @@ export function ApplicationForm({ endpoint, mode, initialPlan = '', onCreated }:
       const found = validateStep(i, data, plan);
       if (Object.keys(found).length) {
         setStep(i);
-        setErrors(found);
+        showErrors(found);
         return;
       }
     }
@@ -227,7 +245,7 @@ export function ApplicationForm({ endpoint, mode, initialPlan = '', onCreated }:
       if (err instanceof ApiError) {
         const keys = Object.keys(err.errors);
         if (keys.length) setStep(Math.min(...keys.map(stepOf)));
-        setErrors(err.errors);
+        showErrors(err.errors);
         setAlert(err.message);
       } else {
         setAlert('Could not reach the server. Please check your connection and try again.');
@@ -597,15 +615,63 @@ function FamilyStep({ meta, plan, data, errors, maxDependants, addDependant, rem
           <Field label="SA ID / Passport no." htmlFor="b-idNumber" required error={errors['beneficiary.idNumber']}>
             <IconInput icon="idCard"><input {...ben('idNumber')} maxLength={20} inputMode="numeric" placeholder="13-digit ID number" /></IconInput>
           </Field>
-          <Field label="Relationship to you" htmlFor="b-relationship" required error={errors['beneficiary.relationship']}>
-            <input {...ben('relationship')} maxLength={40} placeholder="e.g. Daughter" />
-          </Field>
+          <BeneficiaryRelationship
+            value={b.relationship}
+            error={errors['beneficiary.relationship']}
+            onChange={(value) => updateBeneficiary('relationship', value)}
+          />
           <Field label="Phone number" htmlFor="b-phone" required error={errors['beneficiary.phone']}>
             <IconInput icon="phone"><input {...ben('phone')} type="tel" placeholder="082 123 4567" /></IconInput>
           </Field>
         </div>
       </div>
     </fieldset>
+  );
+}
+
+/** Dropdown of common relationships; "Other" adds a box to type the relationship in. */
+function BeneficiaryRelationship({ value, error, onChange }: { value: string; error?: string; onChange: (value: string) => void }) {
+  const [otherChosen, setOtherChosen] = useState(false);
+  const otherInput = useRef<HTMLInputElement>(null);
+  // A typed answer that is not in the list (e.g. when coming back to this step) also means "Other".
+  const isOther = otherChosen || (value !== '' && !BENEFICIARY_RELATIONSHIPS.includes(value));
+
+  useEffect(() => {
+    if (otherChosen) otherInput.current?.focus();
+  }, [otherChosen]);
+
+  function choose(choice: string) {
+    if (choice === OTHER_RELATIONSHIP) {
+      setOtherChosen(true);
+      onChange('');
+    } else {
+      setOtherChosen(false);
+      onChange(choice);
+    }
+  }
+
+  return (
+    <>
+      <Field label="Relationship to you" htmlFor="b-relationship" required error={isOther ? undefined : error}>
+        <select id="b-relationship" value={isOther ? OTHER_RELATIONSHIP : value} onChange={(e) => choose(e.target.value)}>
+          <option value="">Select</option>
+          {BENEFICIARY_RELATIONSHIPS.map((r) => <option key={r} value={r}>{r}</option>)}
+          <option value={OTHER_RELATIONSHIP}>Other (type it in)</option>
+        </select>
+      </Field>
+      {isOther && (
+        <Field label="Their relationship to you" htmlFor="b-relationship-other" required error={error}>
+          <input
+            ref={otherInput}
+            id="b-relationship-other"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            maxLength={40}
+            placeholder="e.g. Godmother"
+          />
+        </Field>
+      )}
+    </>
   );
 }
 

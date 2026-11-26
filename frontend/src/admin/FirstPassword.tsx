@@ -8,7 +8,7 @@ export function FirstPassword({ name, onDone, onLogout }: { name: string; onDone
       <main className="login login--wide">
         <div className="login__card">
           <div className="login__logo">
-            <img src="/img/logo.png" alt={`${site.name} - ${site.tagline}`} width={749} height={653} />
+            <img src="/img/logo.png" alt={`${site.name} - ${site.tagline}`} width={749} height={646} />
           </div>
           <h1 className="login__title">Choose your own password</h1>
           <p className="login__intro">

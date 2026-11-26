@@ -51,7 +51,7 @@ function EmergencyButton() {
 export function Brand({ tagline = site.tagline }: { tagline?: string }) {
   return (
     <>
-      <img className="brand__mark" src="/img/emblem.png" alt="" width={611} height={283} />
+      <img className="brand__mark" src="/img/emblem.png" alt="" width={400} height={190} />
       <span className="brand__text">
         <span className="brand__name">Astute Funerals</span>
         <span className="brand__tagline">{tagline}</span>
@@ -152,7 +152,7 @@ function Footer() {
               src="/img/logo.png"
               alt={`${site.name} - ${site.tagline}`}
               width={749}
-              height={653}
+              height={646}
               loading="lazy"
             />
           </Link>
