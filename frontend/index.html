@@ -4,18 +4,25 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#000000">
-  <!-- Title, description and canonical link are set per page by <Seo> (src/components/Seo.tsx). -->
-  <title>Astute Funerals | Class in Dignity</title>
+  <!-- Homepage fallback metadata; <Seo> supplies the active page's metadata in React. -->
+  <title>Astute Funerals | Funeral Services &amp; Funeral Cover in Danville, Pretoria</title>
+  <meta name="description" content="Astute Funerals provides affordable funeral cover and compassionate funeral services in Danville, Pretoria, with 24/7 emergency assistance.">
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Astute Funerals">
   <meta property="og:locale" content="en_ZA">
+  <meta property="og:title" content="Astute Funerals | Funeral Services &amp; Funeral Cover in Danville, Pretoria">
+  <meta property="og:description" content="Affordable funeral cover and compassionate funeral services in Danville, Pretoria, with 24/7 emergency assistance.">
+  <meta property="og:url" content="%VITE_SITE_URL%/">
   <meta property="og:image" content="%VITE_SITE_URL%/img/og-image.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="Astute Funerals logo - Class in Dignity">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Astute Funerals | Funeral Services &amp; Funeral Cover in Danville, Pretoria">
+  <meta name="twitter:description" content="Affordable funeral cover and compassionate funeral services in Danville, Pretoria, with 24/7 emergency assistance.">
   <meta name="twitter:image" content="%VITE_SITE_URL%/img/og-image.jpg">
+  <meta name="twitter:image:alt" content="Astute Funerals logo - Class in Dignity">
 
   <link rel="icon" href="/img/favicon.png" type="image/png">
   <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
@@ -44,7 +51,18 @@
     },
     "contactPoint": [
       { "@type": "ContactPoint", "contactType": "customer service", "telephone": "+27127537710", "areaServed": "ZA" },
-      { "@type": "ContactPoint", "contactType": "emergency", "telephone": "+27670735351", "areaServed": "ZA", "hoursAvailable": "Mo-Su 00:00-23:59" }
+      {
+        "@type": "ContactPoint",
+        "contactType": "emergency",
+        "telephone": "+27670735351",
+        "areaServed": "ZA",
+        "hoursAvailable": {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+          "opens": "00:00",
+          "closes": "23:59"
+        }
+      }
     ],
     "areaServed": "ZA"
   }
