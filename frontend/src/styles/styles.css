@@ -54,8 +54,8 @@
   --gutter: clamp(16px, 4vw, 32px);
 }
 
-/* Black areas: header, footer, mission cards and the admin sidebar. */
-.site-header, .site-footer, .mission__card, .admin-sidebar {
+/* Black areas: header, footer, mission cards, the admin sidebar and the crash screen. */
+.site-header, .site-footer, .mission__card, .admin-sidebar, .crash {
   --bg: #000000;
   --surface: #0b0b0b;
   --surface-2: #0b0b0b;
@@ -755,6 +755,35 @@ select:disabled { opacity: .5; }
 }
 .form-success__title { font-family: var(--font-display); font-size: 1.8rem; color: var(--heading); }
 .form-success p { color: var(--text-muted); max-width: 480px; margin-left: auto; margin-right: auto; }
+.form-success__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 16px 0 28px; }
+
+/* "What happens next" after applying. */
+.next-steps { display: grid; gap: 10px; max-width: 480px; margin: 0 auto 22px; padding: 0; list-style: none; counter-reset: next; text-align: left; }
+.next-steps li {
+  position: relative; padding: 12px 16px 12px 56px; counter-increment: next;
+  border: 1px solid var(--line-soft); border-radius: var(--radius-sm); background: var(--surface-2); color: var(--text-muted);
+}
+.next-steps li::before {
+  content: counter(next); position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
+  background: var(--gold-gradient); color: var(--black); font-size: .9rem; font-weight: 700;
+}
+.next-steps strong { color: var(--heading); }
+
+/* "We kept your answers" note at the top of the application form. */
+.form-note {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px;
+  margin: 0 0 20px; padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: rgba(224, 180, 60, .08); font-size: .94rem; color: var(--text);
+}
+.form-note .link-btn, .summary__head .link-btn { font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+
+/* Summary on the last step: Plan / Main member / Family, each with a "Change" link. */
+.summary__part + .summary__part { margin-top: 18px; }
+.summary__head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+.summary__part-title { margin: 0; font-size: .78rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); }
+.summary__row strong { overflow-wrap: anywhere; }
+
 .form-success__ref {
   display: inline-block; padding: 10px 22px; border: 1px dashed var(--gold); border-radius: var(--radius-sm);
   font: 700 1.4rem/1.2 ui-monospace, 'Cascadia Code', Consolas, monospace; letter-spacing: .06em; color: var(--gold-text) !important;
@@ -855,6 +884,8 @@ body.nav-open .emergency-fab { display: none; }
   .emergency-fab__icon svg { stroke: var(--black); }
   .emergency-fab__label { font-size: .62rem; }
   .emergency-fab__number { font-size: .92rem; }
+  /* While typing, the keyboard pushes the button up over the very field being filled in: step aside until done. */
+  body:has(input:focus, select:focus, textarea:focus) .emergency-fab { display: none; }
 }
 
 
@@ -887,6 +918,53 @@ body.nav-open .emergency-fab { display: none; }
   .brand__mark { width: 76px; }
   .brand__name { font-size: 1.1rem; }
 }
+
+/* ---------- address suggestions (application form) ---------- */
+
+.address-search { position: relative; }
+.address-search__panel {
+  position: absolute; z-index: 20; top: calc(100% + 6px); left: 0; right: 0; overflow: hidden;
+  border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .14);
+  scroll-margin: 16px; /* breathing room when scrolled into view */
+}
+.address-search__list { margin: 0; padding: 6px 0; max-height: 320px; overflow-y: auto; list-style: none; }
+.address-search__item { display: flex; align-items: flex-start; gap: 10px; padding: 11px 14px; line-height: 1.35; cursor: pointer; }
+.address-search__item .icon { margin-top: 2px; color: var(--gold-text); }
+.address-search__item strong { display: block; font-weight: 600; color: var(--heading); }
+.address-search__secondary { font-size: .88rem; color: var(--text-muted); }
+.address-search__item:hover, .address-search__item.is-active { background: rgba(224, 180, 60, .12); }
+.address-search__foot {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 12px; margin: 0; padding: 8px 14px;
+  border-top: 1px solid var(--line-soft); background: var(--surface-2); font-size: .82rem; color: var(--text-muted);
+}
+/* Google's attribution rules: "Google Maps" in Roboto 400, #5E5E5E, 12-16px, on one line. */
+.address-search__attribution { font: 400 12px/1 Roboto, Arial, sans-serif; color: #5e5e5e; white-space: nowrap; }
+
+/* ---------- privacy notice ---------- */
+
+.legal { max-width: 780px; }
+.legal__updated { margin-bottom: 8px; font-size: .92rem; color: var(--text-muted); }
+.legal h2 { margin: 36px 0 10px; font-family: var(--font-display); font-size: 1.3rem; color: var(--heading); }
+.legal ul { margin: 0 0 1em; padding-left: 1.3em; }
+.legal li { margin-bottom: 8px; }
+.legal li::marker { color: var(--gold-text); }
+.legal a { text-decoration: underline; text-underline-offset: 2px; }
+
+/* ---------- "couldn't load" notice and crash screen ---------- */
+
+.unavailable { margin-bottom: 24px; padding: 20px 22px; border: 1px solid var(--line); border-left: 3px solid var(--gold); border-radius: var(--radius); background: var(--surface-2); }
+.unavailable p { margin: 0 0 14px; }
+.unavailable__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.crash {
+  min-height: 100vh; display: grid; place-content: center; justify-items: center; gap: 6px;
+  padding: 32px var(--gutter); text-align: center; background: var(--bg); color: var(--text);
+}
+.crash__logo { width: 180px; height: auto; margin-bottom: 18px; }
+.crash__title { font-family: var(--font-display); font-size: clamp(1.5rem, 4vw, 2.1rem); color: var(--heading); }
+.crash__text { max-width: 480px; margin: 0 0 22px; color: var(--text-muted); }
+.crash__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
 
 .form-help { margin: 18px 0 0; text-align: center; font-size: .95rem; color: var(--text-muted); }
 .form-help a { font-weight: 600; white-space: nowrap; }

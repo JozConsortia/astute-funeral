@@ -47,12 +47,15 @@ public class ContactController {
 
 	private final Clock clock;
 
+	private final StaffAlerts alerts;
+
 	public ContactController(ContactMessageRepository messages, MailService mail, AdminDirectory directory,
-			Clock clock) {
+			Clock clock, StaffAlerts alerts) {
 		this.messages = messages;
 		this.mail = mail;
 		this.directory = directory;
 		this.clock = clock;
+		this.alerts = alerts;
 	}
 
 	public record ContactRequest(String name, String email, String phone, String subject, String message,
@@ -117,6 +120,7 @@ public class ContactController {
 			throw new ValidationException(errors);
 		}
 		messages.save(new ContactMessage(name, email, phone, subject, message, Instant.now(clock)));
+		alerts.newMessage(name, phone, email, subject, message);
 	}
 
 	@GetMapping("/api/admin/messages")

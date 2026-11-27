@@ -166,6 +166,7 @@ function Footer() {
             <li><Link to="/get-covered">Get covered</Link></li>
             <li><Link to="/apply">Apply online</Link></li>
             <li><Link to="/contact">Contact</Link></li>
+            <li><Link to="/privacy">Privacy notice</Link></li>
           </ul>
         </div>
         <div>

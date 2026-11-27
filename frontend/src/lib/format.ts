@@ -21,6 +21,13 @@ export const labelOf = (options: Option[], value: string) => options.find((o) =>
 
 export const telLink = (phone: string) => `tel:${phone.replace(/[^\d+]/g, '')}`;
 
+/** "082 123 4567" -> "27821234567", the form wa.me links need. */
+export const whatsappNumber = (phone: string) => phone.replace(/\D/g, '').replace(/^0/, '27');
+
+/** "1980-01-31" -> "31 January 1980". */
+export const formatBirthDate = (isoDate: string) =>
+  isoDate ? new Date(`${isoDate}T00:00:00`).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+
 export const capitalise = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 
 /** "Thabo Mokoena" -> "TM" for avatar circles. */

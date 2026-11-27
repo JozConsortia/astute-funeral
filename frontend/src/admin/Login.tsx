@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '../styles/admin.css';
 import { Field, FormAlert } from '../components/Field';
 import { PasswordInput } from '../components/PasswordInput';
@@ -7,8 +7,15 @@ import { Seo } from '../components/Seo';
 import { site } from '../config/site';
 import { api } from '../lib/api';
 
+/** Where to go after signing in: the admin page the person was sent here from, otherwise the overview. */
+function afterLogin(state: unknown) {
+  const from = (state as { from?: unknown } | null)?.from;
+  return typeof from === 'string' && from.startsWith('/admin') && !from.startsWith('/admin/login') ? from : '/admin';
+}
+
 export function Login() {
   const navigate = useNavigate();
+  const target = afterLogin(useLocation().state);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [alert, setAlert] = useState('');
@@ -18,10 +25,10 @@ export function Login() {
     document.body.classList.add('login-page');
     // Already signed in? Go straight to the dashboard.
     api('/api/admin/me')
-      .then(() => navigate('/admin', { replace: true }))
+      .then(() => navigate(target, { replace: true }))
       .catch(() => {});
     return () => document.body.classList.remove('login-page');
-  }, [navigate]);
+  }, [navigate, target]);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -32,7 +39,7 @@ export function Login() {
     setBusy(true);
     try {
       await api('/api/admin/login', 'POST', { username, password });
-      navigate('/admin', { replace: true });
+      navigate(target, { replace: true });
     } catch (err) {
       setAlert((err as Error).message);
       setPassword('');

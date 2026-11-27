@@ -38,11 +38,14 @@ Black-and-gold branding on a clean white page, built to be simple for grieving f
 |---|---|
 | **Home** `/` | Choose between **"Someone has passed away"** (24/7 call button and a step-by-step "what to do next" guide) and **"Plan ahead for my family"** (plans at a glance). Ask for a call back with just a name and number. |
 | **Get covered** `/get-covered` | Compare the Single, Family and Extended Family plans, see how cover works, read the FAQ. |
-| **Apply** `/apply` | A four-step online application: plan → main member → family and beneficiary → confirm. `/apply?plan=family` preselects a plan. |
+| **Apply** `/apply` | A four-step online application: plan → main member → family and beneficiary → confirm. `/apply?plan=family` preselects a plan. An SA ID number fills in the date of birth and gender, a mistyped ID is flagged at once, answers survive a page refresh, and the last step shows everything with **Change** links. Address suggestions as you type (see [Address suggestions](#address-suggestions)). After submitting: copy the reference or send it by WhatsApp. |
 | **About** `/about` | Mission, values and the benefits a policy can pay for. |
 | **Contact** `/contact` | One-tap tiles to call, WhatsApp, email or get directions, plus a pop-up message form. |
+| **Privacy notice** `/privacy` | How personal information is collected, used and protected (POPIA). Linked from the footer and every form. |
 
-Every page has a floating 24/7 emergency call button and works on phones.
+Every page has a floating 24/7 emergency call button and works on phones. If a page fails, visitors see the emergency
+and office numbers instead of a blank screen, and if the server can't be reached the forms say so and give the office
+number.
 
 ### Admin dashboard `/admin`
 
@@ -138,6 +141,9 @@ the machine.
 | `COOKIE_SECURE=true` | Required when the site is served over HTTPS |
 | `PORT` | HTTP port (default `8080`) |
 | `MAIL_FROM` and `SPRING_MAIL_*` | Lets the server email replies itself (see below) |
+| `MAIL_ALERTS_TO` / `MAIL_ALERTS` | Where new-enquiry alerts go (default: the `MAIL_FROM` address) / `false` to switch them off |
+| `GOOGLE_PLACES_API_KEY` | Uses Google for address suggestions instead of the free service (see below) |
+| `ADDRESS_SEARCH_PHOTON` | `false` switches off the free address suggestions |
 
 ### Sending email replies
 
@@ -152,6 +158,11 @@ person's inbox** from the business address:
 A **Send email** button then appears in Messages. The person receives your reply with their original message quoted
 underneath, and their answers come back to the same mailbox. The button stays hidden until the password is filled in.
 
+**Alerts:** once email works, the server also emails the business mailbox about every **call-back request, message and
+online application**, so nothing waits until someone opens the dashboard. Each alert says who to call and links to the
+dashboard (sign-in returns you to that page). ID numbers are left out of the email. Send alerts to a different address
+with `alerts-to` / `MAIL_ALERTS_TO`, or turn them off with `MAIL_ALERTS=false`.
+
 The same settings as environment variables:
 
 | Variable | Example |
@@ -160,6 +171,41 @@ The same settings as environment variables:
 | `SPRING_MAIL_HOST` / `SPRING_MAIL_PORT` | `mail.morokagroup.co.za` / `587` |
 | `SPRING_MAIL_USERNAME` / `SPRING_MAIL_PASSWORD` | the mailbox login |
 | `SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH` / `SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE` | `true` / `true` |
+
+### Address suggestions
+
+As people type in the **Street address** box, the form suggests real South African streets. Picking one fills in the
+street and suburb, town, province and postal code. Typing an address in full always still works.
+
+**Free, on by default.** Suggestions come from [Photon](https://photon.komoot.io), a free service run by komoot using
+OpenStreetMap maps. There is no account, no key and no cost, but only fair use is allowed and there is no guarantee it
+stays up. If it is down, the box simply works as a normal text box.
+
+What to expect from the free maps:
+- Most street names are there, township streets and sections included (Soweto, Mamelodi, Khayelitsha Site C, and so on).
+- Few **house or stand numbers** are there, so the number the person typed is kept when they pick their street.
+- The town or postal code is **sometimes wrong**, so the form asks people to check what was filled in.
+- Ward and council names ("Tshwane Ward 6", "Emfuleni Local Municipality") are left out of addresses.
+
+To switch suggestions off completely, set `ADDRESS_SEARCH_PHOTON=false` (or `app.address-search.photon: false`).
+
+**Google (optional, paid, better coverage).** With a Google key, Google is used instead of the free service:
+
+1. In [Google Cloud](https://console.cloud.google.com/), create a project with billing (a card is required), enable
+   **Places API (New)**, and create an API key.
+2. Restrict the key to **Places API (New)**. If your server has a fixed IP address, also restrict the key to that IP.
+3. Set a **daily quota** on the API as a spending cap.
+4. Put the key in `backend/config/application.yml` under `app.address-search.google-api-key` (see the example file),
+   or set `GOOGLE_PLACES_API_KEY`. Restart the backend.
+
+Check Google's current pricing for Places API (New) first. One address search (all the typing plus the final pick)
+is billed as one Google session.
+
+Either way:
+- Lookups go through this server; any key stays on the server.
+- The server waits for a pause in typing and limits lookups per visitor.
+- Only the typed address leaves the server, never names or ID numbers. The privacy notice names whichever service is
+  in use.
 
 ### Where the data lives
 
@@ -322,7 +368,12 @@ The backend suite covers:
 - the overview filters;
 - password rules;
 - the full temporary-password flow (add user → forced change → deactivate → delete);
-- email replies, using a stand-in mail server.
+- email replies, using a stand-in mail server;
+- email alerts for call-back requests and online applications (and that ID numbers stay out of them, and that a slow
+  mail server never keeps the visitor waiting);
+- address suggestions: Google against a stand-in that answers like Google (requests, session tokens, filling in the
+  form), and the free service against real answers for township addresses (kept house numbers, no ward or council
+  names).
 
 ---
 
@@ -333,6 +384,7 @@ The backend suite covers:
 | Plans, prices, cover amounts, dependant limits | [`backend/src/main/resources/application.yml`](backend/src/main/resources/application.yml) → `app.plans` |
 | Phone numbers, email, address, hours, FSP number | [`frontend/src/config/site.ts`](frontend/src/config/site.ts) and the structured data in [`frontend/index.html`](frontend/index.html) |
 | Page text | [`frontend/src/pages/`](frontend/src/pages/) |
+| Privacy notice (have it reviewed; update it if the forms change) | [`frontend/src/pages/Privacy.tsx`](frontend/src/pages/Privacy.tsx) |
 | Beneficiary relationship choices (the list before "Other") | [`ApplicationForm.tsx`](frontend/src/components/ApplicationForm.tsx) → `BENEFICIARY_RELATIONSHIPS` |
 | Colours and fonts | [`frontend/src/styles/styles.css`](frontend/src/styles/styles.css) (tokens at the top); dashboard in `admin.css` |
 | Icons | [`frontend/src/components/Icon.tsx`](frontend/src/components/Icon.tsx) |

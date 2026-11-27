@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { site } from '../config/site';
 import { ApiError, api } from '../lib/api';
-import { formatDateTime, labelOf, telLink } from '../lib/format';
+import { formatDateTime, labelOf, telLink, whatsappNumber } from '../lib/format';
 import type { ContactMessage, Me, ReplyChannel } from '../types';
 import { useAdmin } from './context';
 
@@ -15,7 +15,6 @@ const FILTERS: { value: Filter; label: string; match: (m: ContactMessage) => boo
 ];
 
 const firstName = (name: string) => name.trim().split(/\s+/)[0] ?? name;
-const whatsappNumber = (phone: string) => phone.replace(/\D/g, '').replace(/^0/, '27');
 
 /** Ready-made replies. {first} and the sign-off are filled in automatically. */
 const TEMPLATES: { label: string; text: string }[] = [

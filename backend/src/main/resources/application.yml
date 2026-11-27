@@ -31,6 +31,18 @@ app:
     # this AND an SMTP server are configured (SPRING_MAIL_HOST, SPRING_MAIL_PORT,
     # SPRING_MAIL_USERNAME, SPRING_MAIL_PASSWORD). Otherwise replies open in the admin's email app.
     from: ${MAIL_FROM:}
+    # Once email works, the server also emails a short alert for every call-back request, message and online
+    # application. alerts-to: where to send them (empty = the "from" address). alerts: false turns them off.
+    alerts: ${MAIL_ALERTS:true}
+    alerts-to: ${MAIL_ALERTS_TO:}
+  address-search:
+    # Address suggestions while typing on the application form.
+    # With a Google key: Google Places API "New" (paid per use: set a daily quota on the key as a spending cap).
+    google-api-key: ${GOOGLE_PLACES_API_KEY:}
+    google-base-url: ${GOOGLE_PLACES_BASE_URL:https://places.googleapis.com}
+    # Without a Google key: the free Photon service (OpenStreetMap maps, fair use). false = no suggestions at all.
+    photon: ${ADDRESS_SEARCH_PHOTON:true}
+    photon-base-url: ${PHOTON_BASE_URL:https://photon.komoot.io}
   admin:
     # First (super) admin account, created on first start. Change the password in Admin > Settings.
     username: ${ADMIN_USERNAME:admin}

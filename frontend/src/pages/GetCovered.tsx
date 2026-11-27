@@ -4,7 +4,8 @@ import { Reveal } from '../components/Reveal';
 import { Seo } from '../components/Seo';
 import { site } from '../config/site';
 import { thousands } from '../lib/format';
-import { useMeta } from '../lib/meta';
+import { useMeta, useMetaFailed } from '../lib/meta';
+import { Unavailable } from '../components/Unavailable';
 
 const FAQS = [
   ['Who can apply for a funeral policy?', 'Any South African resident between 18 and 65 years old with a valid SA ID or passport can apply as the main member.'],
@@ -16,6 +17,7 @@ const FAQS = [
 
 export function GetCovered() {
   const meta = useMeta();
+  const metaFailed = useMetaFailed();
   const minPremium = meta ? Math.min(...meta.plans.map((p) => p.premium)) : 95;
 
   return (
@@ -43,6 +45,7 @@ export function GetCovered() {
             <h2 className="section__title" id="plans-title">Cover that fits your family</h2>
             <p className="section__lead">No hidden fees and no medical examinations. Choose the cover that suits you.</p>
           </Reveal>
+          {metaFailed && !meta && <Unavailable what="our plans" />}
           <Reveal className="plans">
             {meta?.plans.map((p) => (
               <article key={p.id} className={`plan-card${p.featured ? ' plan-card--featured' : ''}`}>

@@ -4,6 +4,14 @@
 app:
   mail:
     from: Astute Funerals <astutefunerals@morokagroup.co.za>
+    # New call-back requests, messages and online applications are emailed to this address
+    # (leave empty to use the "from" address above; set alerts: false to switch them off).
+    alerts-to: ""
+  # Address suggestions on the application form. Free (OpenStreetMap) by default. To use Google instead, paste a
+  # Google Maps Platform key with "Places API (New)" enabled, and set a daily quota on it to cap spending.
+  address-search:
+    google-api-key: ""
+    # photon: false   # uncomment to switch the free suggestions off
 
 spring:
   mail:

@@ -28,6 +28,7 @@ import za.co.astutefunerals.domain.ApplicationSource;
 import za.co.astutefunerals.domain.ApplicationStatus;
 import za.co.astutefunerals.domain.Labelled;
 import za.co.astutefunerals.messages.ContactMessageRepository;
+import za.co.astutefunerals.messages.StaffAlerts;
 
 @Service
 public class ApplicationService {
@@ -48,19 +49,28 @@ public class ApplicationService {
 
 	private final SecureRandom random = new SecureRandom();
 
+	private final StaffAlerts alerts;
+
 	public ApplicationService(PolicyApplicationRepository applications, ContactMessageRepository messages,
-			ApplicationValidator validator, Clock clock) {
+			ApplicationValidator validator, Clock clock, StaffAlerts alerts) {
 		this.applications = applications;
 		this.messages = messages;
 		this.validator = validator;
 		this.clock = clock;
+		this.alerts = alerts;
 	}
 
 	@Transactional
 	public String submit(ApplicationRequest request, ApplicationSource source, String capturedBy) {
 		PolicyApplication application = validator.validate(request);
 		application.submit(newReference(), source, capturedBy, Instant.now(clock));
-		return applications.save(application).getReference();
+		PolicyApplication saved = applications.save(application);
+		// Staff capturing an applicant already know about it; only online applications need an alert.
+		if (source == ApplicationSource.WEBSITE) {
+			alerts.newApplication(saved.getReference(), saved.getFirstName() + " " + saved.getLastName(),
+					saved.getPhone(), saved.getPlanName(), saved.getMonthlyPremium());
+		}
+		return saved.getReference();
 	}
 
 	/** A reference such as AF-261025-DXUC: date plus 4 unambiguous random characters. */

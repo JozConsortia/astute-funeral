@@ -20,8 +20,9 @@ export function Applications() {
     setUrlParams(next, { replace: true });
     setPage(1);
   };
-  const [search, setSearch] = useState('');
-  const [q, setQ] = useState('');
+  // ?q= pre-fills the search, so a link such as the new-application alert email opens that application.
+  const [search, setSearch] = useState(() => urlParams.get('q') ?? '');
+  const [q, setQ] = useState(() => (urlParams.get('q') ?? '').trim());
   const [page, setPage] = useState(1);
   const [data, setData] = useState<PageResult<ApplicationSummary> | null>(null);
 
@@ -89,7 +90,7 @@ export function Applications() {
             <tbody>
               {data?.rows.length ? (
                 data.rows.map((r) => (
-                  <tr key={r.id}>
+                  <tr key={r.id} className="is-clickable" onClick={() => openApplication(r.id)}>
                     <td data-label="Reference">
                       <span>
                         <span className="ref">{r.reference}</span>
@@ -98,14 +99,15 @@ export function Applications() {
                     </td>
                     <td data-label="Applicant"><strong>{r.firstName} {r.lastName}</strong></td>
                     <td data-label="ID / Passport">{r.idNumber}</td>
-                    <td data-label="Phone"><a href={telLink(r.phone)}>{r.phone}</a></td>
+                    <td data-label="Phone"><a href={telLink(r.phone)} onClick={(e) => e.stopPropagation()}>{r.phone}</a></td>
                     <td data-label="Plan">
                       <span>{r.planName}<span className="muted"> · {money(r.monthlyPremium)}/m</span></span>
                     </td>
                     <td data-label="Submitted">{formatDate(r.createdAt)}</td>
                     <td data-label="Status"><StatusPill status={r.status} statuses={meta.statuses} /></td>
                     <td className="table__actions">
-                      <button className="btn btn--outline btn--sm" type="button" onClick={() => openApplication(r.id)}>View</button>
+                      {/* The whole row opens it; the button stays for keyboard users. */}
+                      <button className="btn btn--outline btn--sm" type="button" onClick={(e) => { e.stopPropagation(); openApplication(r.id); }}>View</button>
                     </td>
                   </tr>
                 ))

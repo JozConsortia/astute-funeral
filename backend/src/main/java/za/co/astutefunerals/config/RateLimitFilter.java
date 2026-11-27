@@ -27,7 +27,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
 	private static final Map<String, Limit> LIMITS = Map.of("/api/admin/login", new Limit(8, Duration.ofMinutes(15)),
 			"/api/applications", new Limit(10, Duration.ofHours(1)), "/api/contact",
-			new Limit(5, Duration.ofHours(1)));
+			new Limit(5, Duration.ofHours(1)),
+			// Google bills address lookups: enough for a busy office capturing applicants, not for abuse.
+			"/api/address/suggest", new Limit(150, Duration.ofHours(1)), "/api/address/details",
+			new Limit(40, Duration.ofHours(1)));
 
 	private final Map<String, Window> hits = new ConcurrentHashMap<>();
 

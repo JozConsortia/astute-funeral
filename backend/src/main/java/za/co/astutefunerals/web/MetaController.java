@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import za.co.astutefunerals.address.AddressSearch;
 import za.co.astutefunerals.admin.AdminRole;
 import za.co.astutefunerals.config.AppProperties;
 import za.co.astutefunerals.config.AppProperties.Plan;
@@ -22,13 +23,18 @@ public class MetaController {
 
 	private final AppProperties properties;
 
-	public MetaController(AppProperties properties) {
+	private final AddressSearch addressSearch;
+
+	public MetaController(AppProperties properties, AddressSearch addressSearch) {
 		this.properties = properties;
+		this.addressSearch = addressSearch;
 	}
 
+	/** addressSearch: where address suggestions come from ("google", "openstreetmap"), or "" when they are off. */
 	public record Meta(List<Plan> plans, List<String> provinces, List<String> titles, List<Option> genders,
 			List<Option> maritalStatuses, List<Option> relationships, List<Option> paymentMethods,
-			List<Option> debitDays, List<Option> statuses, List<Option> adminRoles, List<Option> replyChannels) {
+			List<Option> debitDays, List<Option> statuses, List<Option> adminRoles, List<Option> replyChannels,
+			String addressSearch) {
 	}
 
 	@GetMapping("/api/meta")
@@ -36,7 +42,7 @@ public class MetaController {
 		return new Meta(properties.plans(), Catalog.PROVINCES, Catalog.TITLES, Catalog.GENDERS,
 				Catalog.MARITAL_STATUSES, Labelled.options(Relationship.class), Labelled.options(PaymentMethod.class),
 				Catalog.DEBIT_DAYS, Labelled.options(ApplicationStatus.class), Labelled.options(AdminRole.class),
-				Labelled.options(ReplyChannel.class));
+				Labelled.options(ReplyChannel.class), addressSearch.provider());
 	}
 
 }

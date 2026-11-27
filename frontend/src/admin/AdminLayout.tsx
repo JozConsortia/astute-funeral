@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import '../styles/admin.css';
+import { clearApplicationDraft } from '../components/ApplicationForm';
 import { Brand } from '../components/Layout';
 import { Seo } from '../components/Seo';
 import { site } from '../config/site';
@@ -49,7 +50,12 @@ export function AdminLayout() {
 
   // Confirm the session, and send the user to the login page whenever it expires.
   useEffect(() => {
-    const toLogin = () => navigate('/admin/login', { replace: true });
+    // Remember the page (e.g. a link from an alert email) so signing in goes straight back to it.
+    // Several requests can fail at once; only the first redirect counts, or "from" would become the sign-in page.
+    const toLogin = () => {
+      if (window.location.pathname.startsWith('/admin/login')) return;
+      navigate('/admin/login', { replace: true, state: { from: window.location.pathname + window.location.search } });
+    };
     window.addEventListener(AUTH_EXPIRED_EVENT, toLogin);
     api<Me>('/api/admin/me')
       .then(setMe)
@@ -71,6 +77,7 @@ export function AdminLayout() {
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
   async function logout() {
+    clearApplicationDraft('admin'); // the next person at this computer shouldn't see a half-captured applicant
     await api('/api/admin/logout', 'POST').catch(() => {});
     navigate('/admin/login', { replace: true });
   }

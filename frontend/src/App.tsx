@@ -7,6 +7,7 @@ import { Contact } from './pages/Contact';
 import { GetCovered } from './pages/GetCovered';
 import { Home } from './pages/Home';
 import { NotFound } from './pages/NotFound';
+import { Privacy } from './pages/Privacy';
 
 // Admin code is split into its own bundle so public visitors never download it.
 const AdminLayout = lazy(() => import('./admin/AdminLayout').then((m) => ({ default: m.AdminLayout })));
@@ -28,6 +29,7 @@ export function App() {
           <Route path="get-covered" element={<GetCovered />} />
           <Route path="apply" element={<Apply />} />
           <Route path="contact" element={<Contact />} />
+          <Route path="privacy" element={<Privacy />} />
           <Route path="*" element={<NotFound />} />
         </Route>
         <Route path="admin/login" element={<Login />} />

@@ -30,6 +30,8 @@ export interface Meta {
   statuses: Option[];
   adminRoles: Option[];
   replyChannels: Option[];
+  /** Where address suggestions come from while people type: Google (with a key), free OpenStreetMap, or '' (off). */
+  addressSearch: '' | 'google' | 'openstreetmap';
 }
 
 export type Status = 'NEW' | 'IN_REVIEW' | 'APPROVED' | 'DECLINED';

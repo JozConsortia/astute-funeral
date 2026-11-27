@@ -173,6 +173,9 @@ export function Contact() {
                     <Field label="Message" htmlFor="c-message" required error={errors.message} className="grid__span-2">
                       <textarea id="c-message" rows={4} maxLength={3000} placeholder="How can we help?" value={form.message} onChange={(e) => set('message', e.target.value)} />
                     </Field>
+                    <p className="popup__hint grid__span-2">
+                      We only use your details to reply to you. <a href="/privacy" target="_blank" rel="noopener">Privacy notice</a>
+                    </p>
                   </div>
                 </div>
                 <footer className="popup__foot">

@@ -5,7 +5,8 @@ import { Reveal } from '../components/Reveal';
 import { Seo } from '../components/Seo';
 import { site } from '../config/site';
 import { thousands } from '../lib/format';
-import { useMeta } from '../lib/meta';
+import { useMeta, useMetaFailed } from '../lib/meta';
+import { Unavailable } from '../components/Unavailable';
 
 const NEXT_STEPS = [
   {
@@ -28,6 +29,7 @@ const NEXT_STEPS = [
 
 export function Home() {
   const meta = useMeta();
+  const metaFailed = useMetaFailed();
   const minPremium = meta ? Math.min(...meta.plans.map((p) => p.premium)) : 95;
 
   return (
@@ -95,6 +97,7 @@ export function Home() {
             <p className="eyebrow">Our funeral plans</p>
             <h2 className="section__title" id="plans-title">Simple cover, one monthly price</h2>
           </Reveal>
+          {metaFailed && !meta && <Unavailable what="our plans" />}
           <Reveal className="plan-strip">
             {(meta?.plans ?? []).map((p) => (
               <Link className={`plan-mini${p.featured ? ' plan-mini--featured' : ''}`} to={`/apply?plan=${p.id}`} key={p.id}>

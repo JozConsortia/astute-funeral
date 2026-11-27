@@ -49,7 +49,8 @@ export function Apply() {
               <p><a className="btn btn--whatsapp btn--block" href={site.whatsappLink} target="_blank" rel="noopener"><Icon name="whatsapp" /> WhatsApp us</a></p>
             </div>
             <p className="fineprint">
-              Your information is encrypted in transit and is only used to process your application, in line with POPIA.
+              Your information is encrypted in transit and is only used to process your application, in line with POPIA.{' '}
+              <a href="/privacy" target="_blank" rel="noopener">Privacy notice</a>
             </p>
           </aside>
         </div>

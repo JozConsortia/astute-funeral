@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { fullAddress, site } from '../config/site';
 import { api } from '../lib/api';
-import { capitalise, formatDateTime, labelOf, money, telLink } from '../lib/format';
+import { Icon } from '../components/Icon';
+import { capitalise, formatBirthDate, formatDateTime, labelOf, money, telLink, whatsappNumber } from '../lib/format';
 import type { ApplicationDetail, Meta, Status } from '../types';
 import { StatusPill } from './StatusPill';
 
@@ -148,10 +149,18 @@ export function ApplicationDetailModal({ id, meta, onClose, onChanged, onError }
               <Details
                 rows={[
                   ['ID / Passport', app.idNumber],
-                  ['Date of birth', app.dateOfBirth],
+                  ['Date of birth', formatBirthDate(app.dateOfBirth)],
                   ['Gender', capitalise(app.gender)],
                   ['Marital status', labelOf(meta.maritalStatuses, app.maritalStatus)],
-                  ['Cellphone', <a href={telLink(app.phone)}>{app.phone}</a>],
+                  [
+                    'Cellphone',
+                    <>
+                      <a href={telLink(app.phone)}>{app.phone}</a>
+                      <a className="wa-link" href={`https://wa.me/${whatsappNumber(app.phone)}`} target="_blank" rel="noopener">
+                        <Icon name="whatsapp" /> WhatsApp
+                      </a>
+                    </>,
+                  ],
                   ['Alternative', app.altPhone],
                   ['Email', app.email && <a href={`mailto:${app.email}`}>{app.email}</a>],
                   ['Address', [app.address, app.city, app.province, app.postalCode].filter(Boolean).join(', ')],
@@ -171,7 +180,7 @@ export function ApplicationDetailModal({ id, meta, onClose, onChanged, onError }
                           <td>{d.firstName} {d.lastName}</td>
                           <td>{labelOf(meta.relationships, d.relationship)}</td>
                           <td>{d.idNumber || '–'}</td>
-                          <td>{d.dateOfBirth}</td>
+                          <td>{formatBirthDate(d.dateOfBirth)}</td>
                         </tr>
                       ))}
                     </tbody>

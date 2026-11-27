@@ -15,7 +15,8 @@ import za.co.astutefunerals.config.AppProperties;
 @Controller
 public class SiteController {
 
-	private static final List<String> PUBLIC_PAGES = List.of("/", "/about", "/get-covered", "/apply", "/contact");
+	private static final List<String> PUBLIC_PAGES = List.of("/", "/about", "/get-covered", "/apply", "/contact",
+			"/privacy");
 
 	private final AppProperties properties;
 
@@ -23,7 +24,7 @@ public class SiteController {
 		this.properties = properties;
 	}
 
-	@GetMapping({ "/about", "/get-covered", "/apply", "/contact", "/admin", "/admin/**" })
+	@GetMapping({ "/about", "/get-covered", "/apply", "/contact", "/privacy", "/admin", "/admin/**" })
 	public String app() {
 		return "forward:/index.html";
 	}
